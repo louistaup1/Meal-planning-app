@@ -1,0 +1,11 @@
+# Secret settings (API keys). Never commit this file.
+.env
+
+# Your pantry data lives here. It belongs to you, not to the code.
+*.db
+
+# Python's own working files
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
