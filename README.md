@@ -4,6 +4,7 @@ A personal web app that keeps track of the ingredients you have at home and
 (soon) suggests what to cook for dinner.
 
 **What works right now (milestone 1):**
+- The app is protected by a password that you choose.
 - Add, edit and remove pantry items.
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
@@ -71,7 +72,7 @@ read-only key to download it.
     ```
     pytest
     ```
-    You should see a line like `19 passed`.
+    You should see a line like `24 passed`.
 
 ### Part D: Create your private settings file (.env)
 
@@ -86,8 +87,12 @@ read-only key to download it.
     Copy the long line of letters and numbers it prints.
 17. Tap the PythonAnywhere logo to go back to the dashboard. Tap **Files**,
     open the **Meal-planning-app** folder, and tap **.env** to open it.
-18. Replace `change-me-to-something-long-and-random` with the text you copied in step 16.
-    Leave `ANTHROPIC_API_KEY=` empty for now. Tap **Save**.
+18. Make these changes, then tap **Save**:
+    - After `APP_PASSWORD=`, type the password you want to use to open the app,
+      for example `APP_PASSWORD=pick-something-only-you-know`. Use something
+      long that you don't use anywhere else.
+    - Replace `change-me-to-something-long-and-random` with the text you copied in step 16.
+    - Leave `ANTHROPIC_API_KEY=` empty for now.
 
 The `.env` file is never uploaded to GitHub, because the `.gitignore` file tells git to skip it.
 
@@ -112,7 +117,9 @@ The `.env` file is never uploaded to GitHub, because the `.gitignore` file tells
     ```
     Tap **Save**.
 24. Go back to the **Web** tab and tap the big green **Reload** button.
-25. Open **https://YOURNAME.pythonanywhere.com** in Safari. You should see "My pantry".
+25. Open **https://YOURNAME.pythonanywhere.com** in Safari. You should see "Welcome back".
+    Type the password from step 18 and tap **Log in**. You should now see "My pantry".
+    Your iPad stays logged in for 90 days.
 
 ### Part F: Make it feel like an app on your iPad
 
@@ -123,6 +130,11 @@ The `.env` file is never uploaded to GitHub, because the `.gitignore` file tells
 
 About every 3 months, PythonAnywhere emails you to ask you to keep the free site running.
 Go to the **Web** tab and tap **Run until 3 months from today**.
+
+### Changing your password later
+
+Edit `APP_PASSWORD` in the `.env` file (**Files → Meal-planning-app → .env**), save it,
+then tap **Reload** on the **Web** tab.
 
 ---
 
@@ -150,6 +162,7 @@ Your pantry data is in `pantry.db`. Updates never overwrite it.
 | File | What it does |
 |---|---|
 | `app.py` | The web pages and what happens when you tap buttons |
+| `auth.py` | Checks the app password |
 | `pantry.py` | Pantry rules: categories, checking the form, "expiring soon" |
 | `database.py` | Saving and loading items in the `pantry.db` file |
 | `templates/` | The HTML pages |

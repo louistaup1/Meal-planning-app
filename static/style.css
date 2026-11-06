@@ -26,6 +26,20 @@ body {
 .top-bar {
   background: var(--accent);
   padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.top-bar form { margin: 0; }
+.logout {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  color: white;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 6px 10px;
+  cursor: pointer;
 }
 .logo {
   color: white;
@@ -56,12 +70,14 @@ h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: 
   padding: 10px 12px;
   border-radius: 8px;
 }
-.errors {
+.errors,
+.errors-box {
   background: var(--expired);
   border: 1px solid var(--expired-border);
   padding: 10px 12px 10px 32px;
   border-radius: 8px;
 }
+.errors-box { padding: 10px 12px; }
 .empty { color: var(--muted); }
 
 /* Pantry list */

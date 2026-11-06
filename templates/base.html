@@ -11,6 +11,11 @@
 <body>
   <header class="top-bar">
     <a href="{{ url_for('pantry_page') }}" class="logo">🍳 Pantry Chef</a>
+    {% if session.get("logged_in") %}
+      <form method="post" action="{{ url_for('logout_action') }}">
+        <button type="submit" class="logout">Log out</button>
+      </form>
+    {% endif %}
   </header>
 
   <main>

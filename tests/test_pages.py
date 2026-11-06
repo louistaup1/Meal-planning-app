@@ -7,9 +7,11 @@ from app import create_app
 
 @pytest.fixture
 def client(tmp_path):
-    app = create_app(db_path=tmp_path / "test.db")
+    app = create_app(db_path=tmp_path / "test.db", password="test-password")
     app.config["TESTING"] = True
-    return app.test_client()
+    client = app.test_client()
+    client.post("/login", data={"password": "test-password"})
+    return client
 
 
 def test_empty_pantry_shows_a_hint(client):

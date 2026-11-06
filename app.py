@@ -6,11 +6,14 @@ To start the app on your own computer: python app.py
 """
 
 import os
+import secrets
+from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, abort, flash, redirect, render_template, request, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 
 import database
+from auth import password_is_correct
 from pantry import (
     CATEGORIES,
     SUGGESTED_UNITS,
@@ -29,16 +32,65 @@ load_dotenv(os.path.join(PROJECT_FOLDER, ".env"))
 DEFAULT_DB_PATH = os.path.join(PROJECT_FOLDER, "pantry.db")
 
 
-def create_app(db_path=DEFAULT_DB_PATH):
+def create_app(db_path=DEFAULT_DB_PATH, password=None):
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-secret")
+
+    # SECRET_KEY signs the "you are logged in" cookie. If it's missing from .env,
+    # we make up a random one, which is safe but logs you out whenever the app restarts.
+    secret_key = os.environ.get("SECRET_KEY", "")
+    if secret_key in ("", "change-me-to-something-long-and-random"):
+        secret_key = secrets.token_hex(32)
+    app.config["SECRET_KEY"] = secret_key
     app.config["DB_PATH"] = db_path
+
+    # The app password comes from .env (APP_PASSWORD). Tests pass their own.
+    if password is None:
+        password = os.environ.get("APP_PASSWORD", "")
+    app.config["APP_PASSWORD"] = password
+
+    # Stay logged in on this device for 90 days.
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=90)
 
     database.init_db(db_path)
 
     # Make these helpers usable inside the HTML templates.
     app.jinja_env.globals["expiry_status"] = expiry_status
     app.jinja_env.globals["format_quantity"] = format_quantity
+
+    # --- Password lock -----------------------------------------------------
+
+    @app.before_request
+    def require_login():
+        """Runs before every page. Sends you to the login page if needed."""
+        pages_open_to_everyone = ("login_page", "static")
+        if request.endpoint in pages_open_to_everyone:
+            return None
+        if session.get("logged_in"):
+            return None
+        return redirect(url_for("login_page"))
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login_page():
+        password_missing = app.config["APP_PASSWORD"] == ""
+        error = None
+
+        if request.method == "POST" and not password_missing:
+            entered = request.form.get("password", "")
+            if password_is_correct(entered, app.config["APP_PASSWORD"]):
+                session.clear()
+                session["logged_in"] = True
+                session.permanent = True  # remember this device
+                return redirect(url_for("pantry_page"))
+            error = "That password isn't right."
+
+        return render_template("login.html", error=error, password_missing=password_missing)
+
+    @app.route("/logout", methods=["POST"])
+    def logout_action():
+        session.clear()
+        return redirect(url_for("login_page"))
+
+    # --- Pantry pages ------------------------------------------------------
 
     @app.route("/")
     def pantry_page():

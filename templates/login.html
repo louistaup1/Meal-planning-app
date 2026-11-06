@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Log in · Pantry Chef{% endblock %}
+
+{% block content %}
+  <h1>Welcome back</h1>
+
+  {% if password_missing %}
+    <p class="errors-box">
+      No password has been set yet, so the app is locked.
+      Add a line like <code>APP_PASSWORD=your-password</code> to the <code>.env</code> file,
+      then reload the app.
+    </p>
+  {% else %}
+    {% if error %}<p class="errors-box">{{ error }}</p>{% endif %}
+
+    <form method="post" class="item-form">
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required autofocus>
+      </label>
+      <button type="submit" class="button primary">Log in</button>
+    </form>
+  {% endif %}
+{% endblock %}
