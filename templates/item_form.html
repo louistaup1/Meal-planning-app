@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · Pantry Chef{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  {% if errors %}
+    <ul class="errors">
+      {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" class="item-form">
+    <label>Name
+      <input type="text" name="name" value="{{ form.get('name', '') }}" required autofocus>
+    </label>
+
+    <label>Category
+      <select name="category" required>
+        <option value="">Choose…</option>
+        {% for category in categories %}
+          <option value="{{ category }}" {% if form.get('category') == category %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <div class="row">
+      <label>Quantity
+        <input type="text" name="quantity" inputmode="decimal" value="{{ form.get('quantity', '') }}" required>
+      </label>
+      <label>Unit
+        <input type="text" name="unit" list="unit-list" value="{{ form.get('unit', '') }}" placeholder="e.g. g, pieces">
+        <datalist id="unit-list">
+          {% for unit in units %}<option value="{{ unit }}">{% endfor %}
+        </datalist>
+      </label>
+    </div>
+
+    <label>Expiry date <span class="hint">(optional)</span>
+      <input type="date" name="expiry_date" value="{{ form.get('expiry_date', '') }}">
+    </label>
+
+    <div class="form-buttons">
+      <button type="submit" class="button primary">Save</button>
+      <a href="{{ url_for('pantry_page') }}" class="button">Cancel</a>
+    </div>
+  </form>
+
+  {% if item_id %}
+    <form method="post" action="{{ url_for('delete_item_action', item_id=item_id) }}"
+          onsubmit="return confirm('Remove this item from your pantry?');">
+      <button type="submit" class="button danger">Remove from pantry</button>
+    </form>
+  {% endif %}
+{% endblock %}
