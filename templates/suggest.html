@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}What to cook · Pantry Chef{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('pantry_page') }}">← Back to my pantry</a></p>
+  <h1>What should I cook tonight?</h1>
+
+  <form method="post" class="item-form filters" id="suggest-form">
+    <div class="row">
+      <label>Cuisine
+        <select name="cuisine">
+          {% for choice in cuisines %}
+            <option {% if filters.cuisine == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Difficulty
+        <select name="difficulty">
+          {% for choice in difficulties %}
+            <option {% if filters.difficulty == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Style
+        <select name="style">
+          {% for choice in styles %}
+            <option {% if filters.style == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    <button type="submit" class="button primary" id="suggest-button">
+      {% if suggestions %}Suggest again{% else %}Suggest{% endif %}
+    </button>
+    <p class="thinking" id="thinking" hidden>👩‍🍳 Claude is thinking about recipes. This can take up to a minute…</p>
+  </form>
+
+  {% if error %}<p class="errors-box">{{ error }}</p>{% endif %}
+
+  {% for recipe in suggestions %}
+    <article class="recipe-card">
+      <h2 class="recipe-title">{{ recipe.title }}</h2>
+      <p class="recipe-facts">
+        ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }}
+      </p>
+      <p>{{ recipe.summary }}</p>
+      {% if recipe.missing %}
+        <p class="missing">🛒 You're missing: {{ recipe.missing | join(", ") }}</p>
+      {% else %}
+        <p class="have-all">✅ You have everything</p>
+      {% endif %}
+      <a href="{{ url_for('recipe_page', suggestion_id=recipe.id) }}" class="button primary">Cook this</a>
+    </article>
+  {% endfor %}
+
+  <script>
+    // Show the "thinking" message and stop double taps while Claude works.
+    document.getElementById("suggest-form").addEventListener("submit", function () {
+      document.getElementById("thinking").hidden = false;
+      document.getElementById("suggest-button").disabled = true;
+    });
+  </script>
+{% endblock %}

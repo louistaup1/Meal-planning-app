@@ -50,3 +50,14 @@ def test_delete_removes_the_item(tmp_path):
 
     assert database.get_item(db_path, item_id) is None
     assert database.get_all_items(db_path) == []
+
+
+def test_save_and_read_back_a_suggestion(tmp_path):
+    db_path = tmp_path / "test.db"
+    database.init_db(db_path)
+    recipe = {"title": "Pasta", "ingredients": [{"name": "Spaghetti", "amount": 200}], "steps": ["Boil"]}
+
+    suggestion_id = database.save_suggestion(db_path, recipe)
+
+    assert database.get_suggestion(db_path, suggestion_id) == recipe
+    assert database.get_suggestion(db_path, 999) is None

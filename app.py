@@ -12,8 +12,10 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 
+import ai_client
 import database
 from auth import password_is_correct
+from recipes import CUISINES, DIFFICULTIES, STYLES, build_request, check_against_pantry, read_filters
 from pantry import (
     CATEGORIES,
     SUGGESTED_UNITS,
@@ -32,7 +34,11 @@ load_dotenv(os.path.join(PROJECT_FOLDER, ".env"))
 DEFAULT_DB_PATH = os.path.join(PROJECT_FOLDER, "pantry.db")
 
 
-def create_app(db_path=DEFAULT_DB_PATH, password=None):
+def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client.suggest_recipes):
+    """
+    Build the app. Tests pass their own `password` and a pretend
+    `suggest_recipes`, so they never call the real Claude API.
+    """
     app = Flask(__name__)
 
     # SECRET_KEY signs the "you are logged in" cookie. If it's missing from .env,
@@ -161,6 +167,52 @@ def create_app(db_path=DEFAULT_DB_PATH, password=None):
         database.delete_item(app.config["DB_PATH"], item_id)
         flash(f"Removed {existing['name']}.")
         return redirect(url_for("pantry_page"))
+
+    # --- Dinner suggestions -------------------------------------------------
+
+    @app.route("/suggest", methods=["GET", "POST"])
+    def suggest_page():
+        filters = read_filters(request.form)
+        suggestions = []
+        error = None
+
+        if request.method == "POST":
+            pantry_items = database.get_all_items(app.config["DB_PATH"])
+            if not pantry_items:
+                error = "Your pantry is empty. Add a few ingredients first."
+            else:
+                try:
+                    recipes = suggest_recipes(build_request(pantry_items, filters))
+                except ai_client.SuggestionError as problem:
+                    error = str(problem)
+                else:
+                    for recipe in recipes[:3]:
+                        suggestion_id = database.save_suggestion(app.config["DB_PATH"], recipe)
+                        checked = check_against_pantry(recipe, pantry_items)
+                        checked["id"] = suggestion_id
+                        suggestions.append(checked)
+                    if not suggestions:
+                        error = "Claude didn't find a recipe this time. Try different filters."
+
+        return render_template(
+            "suggest.html",
+            filters=filters,
+            cuisines=CUISINES,
+            difficulties=DIFFICULTIES,
+            styles=STYLES,
+            suggestions=suggestions,
+            error=error,
+        )
+
+    @app.route("/recipes/<int:suggestion_id>")
+    def recipe_page(suggestion_id):
+        recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+        if recipe is None:
+            abort(404)
+        # Check against the pantry as it is right now.
+        pantry_items = database.get_all_items(app.config["DB_PATH"])
+        recipe = check_against_pantry(recipe, pantry_items)
+        return render_template("recipe.html", recipe=recipe)
 
     return app
 

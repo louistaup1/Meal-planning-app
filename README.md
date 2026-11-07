@@ -1,17 +1,20 @@
 # 🍳 Pantry Chef
 
 A personal web app that keeps track of the ingredients you have at home and
-(soon) suggests what to cook for dinner.
+suggests what to cook for dinner, using Claude (Anthropic's AI).
 
-**What works right now (milestone 1):**
+**What works right now:**
 - The app is protected by a password that you choose.
 - Add, edit and remove pantry items.
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
 - Items that expire within 3 days are highlighted in yellow. Expired items are highlighted in red.
+- **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
+  by cuisine, difficulty and style (quick, comfort, healthy). Each suggestion shows the total
+  time, the difficulty and what you're missing. Tap **Cook this** to see the ingredients and steps.
 
-**Coming next:** "What should I cook tonight?" suggestions (milestone 2) and
-the step-by-step cook flow (milestone 3).
+**Coming next:** the cook flow (milestone 3). You'll confirm what you used, and your pantry
+will update automatically.
 
 ---
 
@@ -52,7 +55,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `24 passed`.
+    You should see a line like `42 passed`.
 
 ### Part C: Create your secret settings file (.env)
 
@@ -72,7 +75,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
       for example `APP_PASSWORD=pick-something-only-you-know`. Use something
       long that you don't use anywhere else.
     - Replace `change-me-to-something-long-and-random` with the text you copied in step 10.
-    - Leave `ANTHROPIC_API_KEY=` empty for now.
+    - Leave `ANTHROPIC_API_KEY=` empty for now. You'll add it in Part F.
 
 The `.env` file is never uploaded to GitHub, because the `.gitignore` file tells git to skip it.
 
@@ -118,6 +121,26 @@ then tap **Reload** on the **Web** tab.
 
 ---
 
+### Part F: Connect Claude for dinner suggestions
+
+The suggestions use Claude, Anthropic's AI. This is pay-as-you-go: each tap on
+**Suggest** costs roughly 5–10 US cents.
+
+1. In Safari, go to **console.anthropic.com** and create an account.
+2. Open **Settings → Billing** and add credit. $5 is plenty to start.
+3. Open **Settings → API Keys**, tap **Create Key**, name it `pantry-chef`, and copy the key.
+   It starts with `sk-ant-`. Anthropic only shows it once.
+4. On PythonAnywhere, open **Files → Meal-planning-app → .env**.
+5. Paste the key right after `ANTHROPIC_API_KEY=` (no spaces, no quotes), then tap **Save**.
+6. Go to the **Web** tab and tap **Reload**.
+7. Open the app, tap **What should I cook tonight?**, then tap **Suggest**. After up to a
+   minute you should see up to 3 recipes.
+
+Keep the key secret. Don't paste it into chats, emails or GitHub. If it ever leaks,
+delete it in the Anthropic console (**Settings → API Keys**) and create a new one.
+
+---
+
 ## Getting new versions of the app
 
 When a new version of the code is ready:
@@ -143,10 +166,12 @@ Your pantry data is in `pantry.db`. Updates never overwrite it.
 | `app.py` | The web pages and what happens when you tap buttons |
 | `auth.py` | Checks the app password |
 | `pantry.py` | Pantry rules: categories, checking the form, "expiring soon" |
-| `database.py` | Saving and loading items in the `pantry.db` file |
+| `recipes.py` | Recipe rules: filters, the request sent to Claude, finding missing ingredients |
+| `ai_client.py` | The only file that talks to Claude. The model name is set at the top |
+| `database.py` | Saving and loading pantry items and suggested recipes in the `pantry.db` file |
 | `templates/` | The HTML pages |
 | `static/style.css` | Colors, sizes and layout |
-| `tests/` | Automated tests. Run them with `pytest` |
+| `tests/` | Automated tests. Run them with `pytest`. They never call Claude, so they're free |
 | `.env.example` | Template for your secret settings file `.env` |
 
 ## Running on a computer instead (optional)

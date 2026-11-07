@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }} · Pantry Chef{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('suggest_page') }}">← Back to suggestions</a></p>
+  <h1>{{ recipe.title }}</h1>
+  <p class="recipe-facts">
+    ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
+  </p>
+  <p>{{ recipe.summary }}</p>
+
+  <h2>Ingredients</h2>
+  <ul class="ingredient-list">
+    {% for ingredient in recipe.ingredients %}
+      <li class="ingredient status-{{ ingredient.status }}">
+        <span>{{ format_quantity(ingredient.amount) }} {{ ingredient.unit }} {{ ingredient.name }}</span>
+        <span class="ingredient-status">
+          {% if ingredient.status == "have" %}✅ in pantry
+          {% elif ingredient.status == "low" %}⚠️ you may not have enough
+          {% elif ingredient.status == "assumed" %}basic staple
+          {% else %}🛒 to buy{% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Steps</h2>
+  <ol class="steps">
+    {% for step in recipe.steps %}<li>{{ step }}</li>{% endfor %}
+  </ol>
+
+  <p class="hint">Coming in the next version: confirm what you used, so your pantry updates automatically.</p>
+{% endblock %}

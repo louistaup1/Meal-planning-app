@@ -5,8 +5,9 @@ Everything is stored in a single SQLite file (for example "pantry.db").
 Each function opens the file, does one job, and closes it again.
 """
 
+import json
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 
 def connect(db_path):
@@ -28,6 +29,16 @@ def init_db(db_path):
                 quantity    REAL NOT NULL,
                 unit        TEXT NOT NULL DEFAULT '',
                 expiry_date TEXT
+            )
+            """
+        )
+        # Each suggested recipe is saved here, so you can open it again later.
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS suggestions (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at  TEXT NOT NULL,
+                recipe_json TEXT NOT NULL
             )
             """
         )
@@ -95,3 +106,24 @@ def update_item(db_path, item_id, item):
 def delete_item(db_path, item_id):
     with connect(db_path) as connection:
         connection.execute("DELETE FROM pantry_items WHERE id = ?", (item_id,))
+
+
+def save_suggestion(db_path, recipe):
+    """Save one suggested recipe (a dictionary) and return its id."""
+    with connect(db_path) as connection:
+        cursor = connection.execute(
+            "INSERT INTO suggestions (created_at, recipe_json) VALUES (?, ?)",
+            (datetime.now().isoformat(timespec="seconds"), json.dumps(recipe)),
+        )
+        return cursor.lastrowid
+
+
+def get_suggestion(db_path, suggestion_id):
+    """Return a saved recipe as a dictionary, or None if it doesn't exist."""
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT recipe_json FROM suggestions WHERE id = ?", (suggestion_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    return json.loads(row["recipe_json"])

@@ -8,6 +8,10 @@
     <a href="{{ url_for('add_item_page') }}" class="button primary">+ Add item</a>
   </div>
 
+  {% if groups %}
+    <a href="{{ url_for('suggest_page') }}" class="button cook-tonight">🍽️ What should I cook tonight?</a>
+  {% endif %}
+
   {% if not groups %}
     <p class="empty">Your pantry is empty. Tap <strong>+ Add item</strong> to get started.</p>
   {% endif %}

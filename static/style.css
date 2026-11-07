@@ -144,3 +144,50 @@ h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: 
 }
 .button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
 .button.danger { color: var(--expired-border); border-color: var(--expired-border); }
+
+/* Dinner suggestions */
+a { color: var(--accent); }
+.cook-tonight {
+  display: block;
+  text-align: center;
+  font-weight: 600;
+  margin: 8px 0 8px;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.filters .row { flex-wrap: wrap; }
+.filters .row label { min-width: 140px; }
+.thinking { color: var(--muted); font-style: italic; }
+button[disabled] { opacity: 0.6; }
+
+.recipe-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.recipe-card .recipe-title {
+  font-size: 21px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.recipe-facts { color: var(--muted); margin: 0 0 8px; }
+.missing { color: #8a6100; font-weight: 600; }
+.have-all { color: #1e7b3a; font-weight: 600; }
+
+.ingredient-list { list-style: none; padding: 0; }
+.ingredient {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.ingredient-status { color: var(--muted); font-size: 15px; }
+.ingredient.status-missing .ingredient-status { color: #8a6100; font-weight: 600; }
+.ingredient.status-low .ingredient-status { color: #8a6100; }
+.steps li { margin-bottom: 12px; line-height: 1.45; }
