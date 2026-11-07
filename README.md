@@ -40,7 +40,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     cd Meal-planning-app
     ```
-6. Create a private "box" for the app's add-ons (called a virtual environment):
+6. Create a separate "box" for the app's add-ons (called a virtual environment):
     ```
     mkvirtualenv --python=/usr/bin/python3.12 pantry-chef
     ```
@@ -54,7 +54,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     You should see a line like `24 passed`.
 
-### Part C: Create your private settings file (.env)
+### Part C: Create your secret settings file (.env)
 
 9. Still in the Bash console, make your settings file from the template:
     ```
@@ -147,7 +147,7 @@ Your pantry data is in `pantry.db`. Updates never overwrite it.
 | `templates/` | The HTML pages |
 | `static/style.css` | Colors, sizes and layout |
 | `tests/` | Automated tests. Run them with `pytest` |
-| `.env.example` | Template for your private settings file `.env` |
+| `.env.example` | Template for your secret settings file `.env` |
 
 ## Running on a computer instead (optional)
 
