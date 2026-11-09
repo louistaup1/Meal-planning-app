@@ -38,6 +38,7 @@ class Recipe(BaseModel):
     servings: int
     ingredients: list[Ingredient]
     steps: list[str]
+    from_my_recipe_id: Optional[int]  # set when it's one of "My saved recipes"
 
 
 class Suggestions(BaseModel):
@@ -64,7 +65,12 @@ How to write the steps:
 - Short, clear steps a beginner can follow, one action per step. Don't number them.
 - Include temperatures in °C and times in minutes.
 
-total_minutes is the total time, including preparation."""
+total_minutes is the total time, including preparation.
+
+The person may also share "My saved recipes". Treat them as options alongside new ideas, \
+with no special priority. When you suggest one of them, set from_my_recipe_id to its id \
+and follow it closely (you may scale amounts for the number of people, and use the pantry's \
+units). Otherwise set from_my_recipe_id to null."""
 
 
 class SuggestionError(Exception):

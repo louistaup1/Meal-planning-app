@@ -12,9 +12,13 @@
   <header class="top-bar">
     <a href="{{ url_for('pantry_page') }}" class="logo">🍳 Pantry Chef</a>
     {% if session.get("logged_in") %}
-      <form method="post" action="{{ url_for('logout_action') }}">
-        <button type="submit" class="logout">Log out</button>
-      </form>
+      <nav class="top-links">
+        <a href="{{ url_for('pantry_page') }}">Pantry</a>
+        <a href="{{ url_for('my_recipes_page') }}">My recipes</a>
+        <form method="post" action="{{ url_for('logout_action') }}">
+          <button type="submit" class="logout">Log out</button>
+        </form>
+      </nav>
     {% endif %}
   </header>
 

@@ -19,6 +19,7 @@ PRETEND_RECIPE = {
         {"name": "Fresh parsley", "amount": 1, "unit": "bunches", "pantry_item_id": None, "is_staple": False},
     ],
     "steps": ["Boil the pasta.", "Toss with parsley."],
+    "from_my_recipe_id": None,
 }
 
 
@@ -153,3 +154,50 @@ def test_a_refusal_becomes_a_friendly_error(fake_anthropic):
     fake_anthropic.response = FakeResponse(None, stop_reason="refusal")
     with pytest.raises(ai_client.SuggestionError, match="couldn't suggest"):
         ai_client.suggest_recipes("My pantry: ...")
+
+
+# --- My recipes ---------------------------------------------------------------
+
+def test_save_view_and_delete_my_recipe(tmp_path):
+    client = make_client(tmp_path, PretendClaude())
+
+    page = client.post("/my-recipes", data={"title": "Grandma's soup", "text": "Leeks, potatoes.\nSimmer 30 min."},
+                       follow_redirects=True)
+    assert b"Grandma&#39;s soup" in page.data
+
+    page = client.get("/my-recipes/1")
+    assert b"Simmer 30 min." in page.data
+
+    page = client.post("/my-recipes/1/delete", follow_redirects=True)
+    assert b"No saved recipes yet." in page.data
+
+
+def test_my_recipe_needs_title_and_text(tmp_path):
+    client = make_client(tmp_path, PretendClaude())
+    page = client.post("/my-recipes", data={"title": "", "text": ""})
+    assert b"Please give the recipe a title." in page.data
+    assert b"Please paste the recipe." in page.data
+
+
+def test_saved_recipes_are_sent_to_claude_and_labelled(tmp_path):
+    from_mine = dict(PRETEND_RECIPE, title="Grandma's soup", from_my_recipe_id=1)
+    made_up_link = dict(PRETEND_RECIPE, title="Other dish", from_my_recipe_id=42)
+    pretend = PretendClaude(recipes=[from_mine, made_up_link])
+    client = make_client(tmp_path, pretend)
+    add_spaghetti(client)
+    client.post("/my-recipes", data={"title": "Grandma's soup", "text": "Leeks, potatoes."})
+
+    page = client.post("/suggest", data={})
+
+    assert "My recipe id 1: Grandma's soup" in pretend.requests[0]
+    assert "Leeks, potatoes." in pretend.requests[0]
+    # Only the real link is labelled; id 42 doesn't exist, so it's ignored.
+    assert page.data.count(b"From my recipes") == 1
+
+
+def test_without_saved_recipes_the_request_has_no_recipe_section(tmp_path):
+    pretend = PretendClaude()
+    client = make_client(tmp_path, pretend)
+    add_spaghetti(client)
+    client.post("/suggest", data={})
+    assert "My saved recipes" not in pretend.requests[0]

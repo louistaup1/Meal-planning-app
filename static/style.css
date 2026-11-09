@@ -31,6 +31,8 @@ body {
   align-items: center;
 }
 .top-bar form { margin: 0; }
+.top-links { display: flex; align-items: center; gap: 16px; }
+.top-links a { color: white; text-decoration: none; font-size: 15px; }
 .logout {
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -191,3 +193,20 @@ button[disabled] { opacity: 0.6; }
 .ingredient.status-missing .ingredient-status { color: #8a6100; font-weight: 600; }
 .ingredient.status-low .ingredient-status { color: #8a6100; }
 .steps li { margin-bottom: 12px; line-height: 1.45; }
+
+/* My recipes */
+.from-mine { color: var(--accent); font-weight: 600; margin: 0 0 8px; }
+.item-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  margin-top: 6px;
+  padding: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.saved-recipe-text { white-space: pre-wrap; line-height: 1.45; background: var(--card);
+  border: 1px solid var(--border); border-radius: 10px; padding: 16px; }

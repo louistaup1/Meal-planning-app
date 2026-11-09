@@ -32,6 +32,17 @@ def init_db(db_path):
             )
             """
         )
+        # Recipes you've pasted in yourself. Kept exactly as you typed them.
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS my_recipes (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                title       TEXT NOT NULL,
+                text        TEXT NOT NULL,
+                created_at  TEXT NOT NULL
+            )
+            """
+        )
         # Each suggested recipe is saved here, so you can open it again later.
         connection.execute(
             """
@@ -127,3 +138,37 @@ def get_suggestion(db_path, suggestion_id):
     if row is None:
         return None
     return json.loads(row["recipe_json"])
+
+
+# --- My recipes ---------------------------------------------------------------
+
+def add_my_recipe(db_path, title, text):
+    """Save a recipe you pasted in and return its id."""
+    with connect(db_path) as connection:
+        cursor = connection.execute(
+            "INSERT INTO my_recipes (title, text, created_at) VALUES (?, ?, ?)",
+            (title, text, datetime.now().isoformat(timespec="seconds")),
+        )
+        return cursor.lastrowid
+
+
+def get_all_my_recipes(db_path):
+    """All your saved recipes, sorted by title."""
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            "SELECT * FROM my_recipes ORDER BY title COLLATE NOCASE"
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_my_recipe(db_path, recipe_id):
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM my_recipes WHERE id = ?", (recipe_id,)
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def delete_my_recipe(db_path, recipe_id):
+    with connect(db_path) as connection:
+        connection.execute("DELETE FROM my_recipes WHERE id = ?", (recipe_id,))

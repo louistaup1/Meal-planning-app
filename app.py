@@ -22,7 +22,9 @@ from recipes import (
     STYLES,
     build_request,
     check_against_pantry,
+    link_to_my_recipe,
     read_filters,
+    validate_my_recipe,
 )
 from pantry import (
     CATEGORIES,
@@ -190,11 +192,14 @@ def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client
                 error = "Your pantry is empty. Add a few ingredients first."
             else:
                 try:
-                    recipes = suggest_recipes(build_request(pantry_items, filters))
+                    my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+                    request_text = build_request(pantry_items, filters, my_recipes=my_recipes)
+                    recipes = suggest_recipes(request_text)
                 except ai_client.SuggestionError as problem:
                     error = str(problem)
                 else:
                     for recipe in recipes[:3]:
+                        recipe = link_to_my_recipe(recipe, my_recipes)
                         suggestion_id = database.save_suggestion(app.config["DB_PATH"], recipe)
                         checked = check_against_pantry(recipe, pantry_items)
                         checked["id"] = suggestion_id
@@ -222,6 +227,37 @@ def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client
         pantry_items = database.get_all_items(app.config["DB_PATH"])
         recipe = check_against_pantry(recipe, pantry_items)
         return render_template("recipe.html", recipe=recipe)
+
+    # --- My recipes --------------------------------------------------------
+
+    @app.route("/my-recipes", methods=["GET", "POST"])
+    def my_recipes_page():
+        form = request.form if request.method == "POST" else {}
+        errors = []
+        if request.method == "POST":
+            title, text, errors = validate_my_recipe(form)
+            if not errors:
+                database.add_my_recipe(app.config["DB_PATH"], title, text)
+                flash(f"Saved {title}.")
+                return redirect(url_for("my_recipes_page"))
+        my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+        return render_template("my_recipes.html", my_recipes=my_recipes, form=form, errors=errors)
+
+    @app.route("/my-recipes/<int:recipe_id>")
+    def my_recipe_page(recipe_id):
+        recipe = database.get_my_recipe(app.config["DB_PATH"], recipe_id)
+        if recipe is None:
+            abort(404)
+        return render_template("my_recipe.html", recipe=recipe)
+
+    @app.route("/my-recipes/<int:recipe_id>/delete", methods=["POST"])
+    def delete_my_recipe_action(recipe_id):
+        recipe = database.get_my_recipe(app.config["DB_PATH"], recipe_id)
+        if recipe is None:
+            abort(404)
+        database.delete_my_recipe(app.config["DB_PATH"], recipe_id)
+        flash(f"Deleted {recipe['title']}.")
+        return redirect(url_for("my_recipes_page"))
 
     return app
 
