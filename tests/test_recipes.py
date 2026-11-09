@@ -21,13 +21,23 @@ def ingredient(name, amount, unit, pantry_item_id, is_staple=False):
 
 # --- read_filters ------------------------------------------------------------
 
-def test_filters_default_to_any():
-    assert read_filters({}) == {"cuisine": "Any", "difficulty": "Any", "style": "Any"}
+def test_filters_default_to_any_and_two_people():
+    assert read_filters({}) == {"cuisine": "Any", "difficulty": "Any", "style": "Any", "people": 2}
 
 
 def test_unknown_filter_values_become_any():
-    filters = read_filters({"cuisine": "Martian", "difficulty": "Easy", "style": "Comfort"})
-    assert filters == {"cuisine": "Any", "difficulty": "Easy", "style": "Comfort"}
+    filters = read_filters({"cuisine": "Martian", "difficulty": "Easy", "style": "Comfort", "people": "4"})
+    assert filters == {"cuisine": "Any", "difficulty": "Easy", "style": "Comfort", "people": 4}
+
+
+def test_bad_people_values_fall_back_to_two():
+    assert read_filters({"people": "lots"})["people"] == 2
+    assert read_filters({"people": "50"})["people"] == 2
+
+
+def test_request_says_how_many_people():
+    assert "for 1 person" in build_request(PANTRY, read_filters({"people": "1"}), TODAY)
+    assert "for 4 people" in build_request(PANTRY, read_filters({"people": "4"}), TODAY)
 
 
 # --- describe_pantry and build_request ----------------------------------------
@@ -41,7 +51,7 @@ def test_pantry_description_marks_expiring_and_expired_items():
 
 
 def test_request_includes_only_chosen_filters():
-    text = build_request(PANTRY, {"cuisine": "Italian", "difficulty": "Any", "style": "Quick"}, TODAY)
+    text = build_request(PANTRY, {"cuisine": "Italian", "difficulty": "Any", "style": "Quick", "people": 2}, TODAY)
     assert "Cuisine: Italian" in text
     assert "Style: Quick" in text
     assert "Difficulty" not in text

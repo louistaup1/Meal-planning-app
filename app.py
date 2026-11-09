@@ -15,7 +15,15 @@ from flask import Flask, abort, flash, redirect, render_template, request, sessi
 import ai_client
 import database
 from auth import password_is_correct
-from recipes import CUISINES, DIFFICULTIES, STYLES, build_request, check_against_pantry, read_filters
+from recipes import (
+    CUISINES,
+    DIFFICULTIES,
+    PEOPLE_CHOICES,
+    STYLES,
+    build_request,
+    check_against_pantry,
+    read_filters,
+)
 from pantry import (
     CATEGORIES,
     SUGGESTED_UNITS,
@@ -200,6 +208,7 @@ def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client
             cuisines=CUISINES,
             difficulties=DIFFICULTIES,
             styles=STYLES,
+            people_choices=PEOPLE_CHOICES,
             suggestions=suggestions,
             error=error,
         )

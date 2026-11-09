@@ -13,6 +13,8 @@ from pantry import expiry_status, format_quantity
 CUISINES = ["Any", "Italian", "French", "Asian", "Indian", "Mexican", "Mediterranean", "American"]
 DIFFICULTIES = ["Any", "Easy", "Medium", "Hard"]
 STYLES = ["Any", "Quick", "Comfort", "Healthy"]
+PEOPLE_CHOICES = [1, 2, 3, 4, 5, 6, 7, 8]
+DEFAULT_PEOPLE = 2
 
 MAX_SUGGESTIONS = 3
 
@@ -26,6 +28,12 @@ def read_filters(form):
     for field, choices in (("cuisine", CUISINES), ("difficulty", DIFFICULTIES), ("style", STYLES)):
         value = form.get(field, "Any")
         filters[field] = value if value in choices else "Any"
+
+    try:
+        people = int(form.get("people", DEFAULT_PEOPLE))
+    except ValueError:
+        people = DEFAULT_PEOPLE
+    filters["people"] = people if people in PEOPLE_CHOICES else DEFAULT_PEOPLE
     return filters
 
 
@@ -58,8 +66,11 @@ def build_request(pantry_items, filters, today=None):
         wishes.append(f"Style: {filters['style']}")
     wishes_text = "\n".join(wishes) if wishes else "No preferences. Surprise me."
 
+    people = filters["people"]
+    people_text = "1 person" if people == 1 else f"{people} people"
+
     return (
-        f"Suggest up to {MAX_SUGGESTIONS} dinner recipes for tonight.\n\n"
+        f"Suggest up to {MAX_SUGGESTIONS} dinner recipes for tonight, for {people_text}.\n\n"
         f"My pantry:\n{describe_pantry(pantry_items, today)}\n\n"
         f"My preferences:\n{wishes_text}"
     )

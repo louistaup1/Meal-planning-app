@@ -52,7 +52,8 @@ How to choose recipes:
 - Prefer items marked EXPIRES SOON, so they don't go to waste. Never use items marked EXPIRED.
 - Respect every preference given (cuisine, difficulty, style). "Quick" means 30 minutes or less in total.
 - Make the recipes different from each other.
-- Recipes are for 2 servings unless the pantry clearly suggests otherwise.
+- Write each recipe for the number of people asked for, and scale the ingredient amounts to match.
+  Set servings to that number.
 
 How to fill in each ingredient:
 - pantry_item_id: the id of the pantry item it uses, exactly as listed. Use null if it's not in the pantry.

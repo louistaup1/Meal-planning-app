@@ -156,7 +156,7 @@ a { color: var(--accent); }
   color: var(--accent);
 }
 .filters .row { flex-wrap: wrap; }
-.filters .row label { min-width: 140px; }
+.filters .row label { min-width: 120px; }
 .thinking { color: var(--muted); font-style: italic; }
 button[disabled] { opacity: 0.6; }
 

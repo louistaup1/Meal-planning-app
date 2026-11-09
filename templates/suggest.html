@@ -29,6 +29,13 @@
           {% endfor %}
         </select>
       </label>
+      <label>People
+        <select name="people">
+          {% for choice in people_choices %}
+            <option value="{{ choice }}" {% if filters.people == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
     </div>
     <button type="submit" class="button primary" id="suggest-button">
       {% if suggestions %}Suggest again{% else %}Suggest{% endif %}
@@ -42,7 +49,7 @@
     <article class="recipe-card">
       <h2 class="recipe-title">{{ recipe.title }}</h2>
       <p class="recipe-facts">
-        ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }}
+        ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
       </p>
       <p>{{ recipe.summary }}</p>
       {% if recipe.missing %}
