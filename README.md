@@ -129,7 +129,7 @@ then tap **Reload** on the **Web** tab.
 
 ### Part F: Connect Claude for dinner suggestions
 
-The suggestions and the spice photos use Claude, Anthropic's AI. This is pay-as-you-go:
+The suggestions and "Add from photos" use Claude, Anthropic's AI. This is pay-as-you-go:
 each tap on **Suggest** costs roughly 5–10 US cents (about 1 cent more for every 10 saved
 recipes), and reading photos costs about 2–4 cents per photo.
 
