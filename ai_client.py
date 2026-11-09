@@ -8,6 +8,7 @@ so the rest of the app never has to guess what Claude meant.
 Your API key is read from the ANTHROPIC_API_KEY line in the .env file.
 """
 
+import base64
 import os
 from typing import Literal, Optional
 
@@ -45,6 +46,10 @@ class Suggestions(BaseModel):
     recipes: list[Recipe]
 
 
+class SpiceList(BaseModel):
+    spices: list[str]
+
+
 INSTRUCTIONS = """You are a friendly home-cooking assistant. You suggest dinner recipes \
 based on what the person already has in their pantry.
 
@@ -77,12 +82,61 @@ class SuggestionError(Exception):
     """A problem getting suggestions, with a message that's safe to show on screen."""
 
 
+SPICE_INSTRUCTIONS = """You read spice labels from photos for a pantry app.
+
+List every spice, dried herb, spice blend or seasoning whose label you can read in the photos.
+- Use the common English name in sentence case, for example "Smoked paprika" or "Herbes de Provence".
+- List each spice once, even if it appears in several photos.
+- Skip anything you can't read clearly. Don't guess.
+- Skip things that aren't spices or seasonings (for example oil, vinegar or flour)."""
+
+
 def suggest_recipes(request_text):
     """
     Ask Claude for recipe suggestions.
 
     Returns a list of plain dictionaries, one per recipe.
     Raises SuggestionError with a friendly message if something goes wrong.
+    """
+    result = _ask_claude(
+        instructions=INSTRUCTIONS,
+        content=request_text,
+        output_format=Suggestions,
+        effort="medium",
+    )
+    return [recipe.model_dump() for recipe in result.recipes]
+
+
+def read_spices_from_photos(jpeg_photos):
+    """
+    Ask Claude which spices it can see in some photos (each one JPEG bytes).
+    Returns a list of spice names.
+    """
+    content = []
+    for photo in jpeg_photos:
+        content.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": base64.standard_b64encode(photo).decode("utf-8"),
+            },
+        })
+    content.append({"type": "text", "text": "Which spices can you see in these photos?"})
+
+    result = _ask_claude(
+        instructions=SPICE_INSTRUCTIONS,
+        content=content,
+        output_format=SpiceList,
+        effort="low",
+    )
+    return result.spices
+
+
+def _ask_claude(instructions, content, output_format, effort):
+    """
+    Send one request to Claude and return its reply in the given format.
+    All the error handling for every Claude request lives here.
     """
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise SuggestionError(
@@ -96,14 +150,14 @@ def suggest_recipes(request_text):
         response = client.beta.messages.parse(
             model=MODEL,
             max_tokens=16000,
-            output_config={"effort": "medium"},
+            output_config={"effort": effort},
             # If Claude declines for safety reasons (very unlikely for recipes),
             # Anthropic automatically retries with a recommended backup model.
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
-            system=INSTRUCTIONS,
-            messages=[{"role": "user", "content": request_text}],
-            output_format=Suggestions,
+            system=instructions,
+            messages=[{"role": "user", "content": content}],
+            output_format=output_format,
         )
     except anthropic.AuthenticationError:
         raise SuggestionError("Anthropic didn't accept the API key. Check ANTHROPIC_API_KEY in your .env file.")
@@ -119,6 +173,6 @@ def suggest_recipes(request_text):
         raise SuggestionError("Couldn't reach Anthropic. Check the internet connection and try again.")
 
     if response.stop_reason == "refusal" or response.parsed_output is None:
-        raise SuggestionError("Claude couldn't suggest recipes this time. Please try again.")
+        raise SuggestionError("Claude couldn't answer this time. Please try again.")
 
-    return [recipe.model_dump() for recipe in response.parsed_output.recipes]
+    return response.parsed_output

@@ -11,6 +11,7 @@
   {% if groups %}
     <a href="{{ url_for('suggest_page') }}" class="button cook-tonight">🍽️ What should I cook tonight?</a>
   {% endif %}
+  <a href="{{ url_for('spice_photos_page') }}" class="button secondary-wide">📷 Add spices from photos</a>
 
   {% if not groups %}
     <p class="empty">Your pantry is empty. Tap <strong>+ Add item</strong> to get started.</p>

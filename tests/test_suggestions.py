@@ -152,7 +152,7 @@ def test_suggest_recipes_sends_the_right_settings_and_returns_dicts(fake_anthrop
 
 def test_a_refusal_becomes_a_friendly_error(fake_anthropic):
     fake_anthropic.response = FakeResponse(None, stop_reason="refusal")
-    with pytest.raises(ai_client.SuggestionError, match="couldn't suggest"):
+    with pytest.raises(ai_client.SuggestionError, match="couldn.t answer"):
         ai_client.suggest_recipes("My pantry: ...")
 
 

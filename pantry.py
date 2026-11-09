@@ -123,3 +123,29 @@ def group_by_category(items):
             items_in_category.sort(key=lambda item: item["name"].lower())
             groups.append((category, items_in_category))
     return groups
+
+
+def plan_spice_additions(spice_names, pantry_items):
+    """
+    Tidy up the spice names read from photos, ready for you to review.
+
+    Removes blanks and duplicates (ignoring capital letters), and marks
+    any spice that's already in your pantry. Returns a list like:
+      [{"name": "Paprika", "already_have": False}, ...]
+    """
+    pantry_names = {item["name"].strip().lower() for item in pantry_items}
+    seen = set()
+    plan = []
+    for name in spice_names:
+        name = name.strip()[:100]
+        key = name.lower()
+        if name == "" or key in seen:
+            continue
+        seen.add(key)
+        plan.append({"name": name, "already_have": key in pantry_names})
+    return plan
+
+
+def new_spice_item(name):
+    """A pantry item for a spice added from a photo. Quantities are ignored, so it's 1 jar."""
+    return {"name": name, "category": "Spices", "quantity": 1.0, "unit": "jars", "expiry_date": None}

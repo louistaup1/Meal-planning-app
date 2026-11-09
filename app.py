@@ -15,6 +15,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, sessi
 import ai_client
 import database
 from auth import password_is_correct
+from photos import MAX_PHOTOS, PhotoError, prepare_photo
 from recipes import (
     CUISINES,
     DIFFICULTIES,
@@ -32,6 +33,8 @@ from pantry import (
     expiry_status,
     format_quantity,
     group_by_category,
+    new_spice_item,
+    plan_spice_additions,
     validate_item,
 )
 
@@ -44,12 +47,19 @@ load_dotenv(os.path.join(PROJECT_FOLDER, ".env"))
 DEFAULT_DB_PATH = os.path.join(PROJECT_FOLDER, "pantry.db")
 
 
-def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client.suggest_recipes):
+def create_app(
+    db_path=DEFAULT_DB_PATH,
+    password=None,
+    suggest_recipes=ai_client.suggest_recipes,
+    read_spices=ai_client.read_spices_from_photos,
+):
     """
-    Build the app. Tests pass their own `password` and a pretend
-    `suggest_recipes`, so they never call the real Claude API.
+    Build the app. Tests pass their own `password` and pretend versions of
+    `suggest_recipes` and `read_spices`, so they never call the real Claude API.
     """
     app = Flask(__name__)
+    # Allow photo uploads up to 50 MB in total.
+    app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
     # SECRET_KEY signs the "you are logged in" cookie. If it's missing from .env,
     # we make up a random one, which is safe but logs you out whenever the app restarts.
@@ -227,6 +237,44 @@ def create_app(db_path=DEFAULT_DB_PATH, password=None, suggest_recipes=ai_client
         pantry_items = database.get_all_items(app.config["DB_PATH"])
         recipe = check_against_pantry(recipe, pantry_items)
         return render_template("recipe.html", recipe=recipe)
+
+    # --- Spices from photos -----------------------------------------------
+
+    @app.route("/spices/photos", methods=["GET", "POST"])
+    def spice_photos_page():
+        error = None
+        if request.method == "POST":
+            uploads = [f for f in request.files.getlist("photos") if f.filename]
+            if not uploads:
+                error = "Please choose at least one photo."
+            elif len(uploads) > MAX_PHOTOS:
+                error = f"Please choose up to {MAX_PHOTOS} photos at a time."
+            else:
+                try:
+                    photos = [prepare_photo(f.read(), f.filename) for f in uploads]
+                    spice_names = read_spices(photos)
+                except (PhotoError, ai_client.SuggestionError) as problem:
+                    error = str(problem)
+                else:
+                    pantry_items = database.get_all_items(app.config["DB_PATH"])
+                    plan = plan_spice_additions(spice_names, pantry_items)
+                    if not plan:
+                        error = "Claude couldn't read any spice labels. Try a closer, brighter photo."
+                    else:
+                        return render_template("spice_review.html", plan=plan)
+        return render_template("spice_photos.html", error=error, max_photos=MAX_PHOTOS)
+
+    @app.route("/spices/add", methods=["POST"])
+    def add_spices_action():
+        pantry_items = database.get_all_items(app.config["DB_PATH"])
+        plan = plan_spice_additions(request.form.getlist("spice"), pantry_items)
+        added = 0
+        for spice in plan:
+            if not spice["already_have"]:
+                database.add_item(app.config["DB_PATH"], new_spice_item(spice["name"]))
+                added += 1
+        flash("Added 1 spice." if added == 1 else f"Added {added} spices.")
+        return redirect(url_for("pantry_page"))
 
     # --- My recipes --------------------------------------------------------
 

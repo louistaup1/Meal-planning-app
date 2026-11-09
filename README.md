@@ -9,8 +9,12 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
 - Items that expire within 3 days are highlighted in yellow. Expired items are highlighted in red.
+- **Add spices from photos:** take or choose up to 5 photos of your spice jars. Claude reads
+  the labels, and you tick which spices to add. Each is added as 1 jar.
+- **My recipes:** paste your own recipes (any layout). Claude considers them alongside new
+  ideas when suggesting dinner, and marks them "From my recipes".
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
-  by cuisine, difficulty and style (quick, comfort, healthy). Each suggestion shows the total
+  by cuisine, difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
   time, the difficulty and what you're missing. Tap **Cook this** to see the ingredients and steps.
 
 **Coming next:** the cook flow (milestone 3). You'll confirm what you used, and your pantry
@@ -55,7 +59,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `42 passed`.
+    You should see a line like `58 passed`.
 
 ### Part C: Create your secret settings file (.env)
 
@@ -123,8 +127,9 @@ then tap **Reload** on the **Web** tab.
 
 ### Part F: Connect Claude for dinner suggestions
 
-The suggestions use Claude, Anthropic's AI. This is pay-as-you-go: each tap on
-**Suggest** costs roughly 5–10 US cents.
+The suggestions and the spice photos use Claude, Anthropic's AI. This is pay-as-you-go:
+each tap on **Suggest** costs roughly 5–10 US cents (about 1 cent more for every 10 saved
+recipes), and reading spice photos costs about 1–3 cents per photo.
 
 1. In Safari, go to **console.anthropic.com** and create an account.
 2. Open **Settings → Billing** and add credit. $5 is plenty to start.
@@ -168,7 +173,8 @@ Your pantry data is in `pantry.db`. Updates never overwrite it.
 | `pantry.py` | Pantry rules: categories, checking the form, "expiring soon" |
 | `recipes.py` | Recipe rules: filters, the request sent to Claude, finding missing ingredients |
 | `ai_client.py` | The only file that talks to Claude. The model name is set at the top |
-| `database.py` | Saving and loading pantry items and suggested recipes in the `pantry.db` file |
+| `photos.py` | Shrinks photos before they're sent to Claude |
+| `database.py` | Saving pantry items, your recipes and suggestions in the `pantry.db` file |
 | `templates/` | The HTML pages |
 | `static/style.css` | Colors, sizes and layout |
 | `tests/` | Automated tests. Run them with `pytest`. They never call Claude, so they're free |
