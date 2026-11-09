@@ -7,13 +7,14 @@ To start the app on your own computer: python app.py
 
 import os
 import secrets
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 
 import ai_client
 import database
+from cooking import apply_cooking, cook_checklist
 from auth import password_is_correct
 from photos import MAX_PHOTOS, PhotoError, prepare_upload
 from recipes import (
@@ -248,6 +249,22 @@ def create_app(
             error=error,
         )
 
+    # --- Cooking a recipe --------------------------------------------------
+
+    def show_recipe(suggestion_id, recipe, pantry_items, form=None, errors=()):
+        """The recipe page with its "What did you use?" checklist."""
+        checked = check_against_pantry(recipe, pantry_items)
+        checked["id"] = suggestion_id
+        staples = [i["name"] for i in checked["ingredients"] if i["status"] == "assumed"]
+        return render_template(
+            "recipe.html",
+            recipe=checked,
+            checklist=cook_checklist(checked, pantry_items),
+            staples=staples,
+            form=form,
+            errors=errors,
+        )
+
     @app.route("/recipes/<int:suggestion_id>")
     def recipe_page(suggestion_id):
         recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
@@ -255,8 +272,50 @@ def create_app(
             abort(404)
         # Check against the pantry as it is right now.
         pantry_items = database.get_all_items(app.config["DB_PATH"])
-        recipe = check_against_pantry(recipe, pantry_items)
-        return render_template("recipe.html", recipe=recipe)
+        return show_recipe(suggestion_id, recipe, pantry_items)
+
+    @app.route("/recipes/<int:suggestion_id>/cook", methods=["POST"])
+    def start_cooking_action(suggestion_id):
+        recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+        if recipe is None:
+            abort(404)
+        pantry_items = database.get_all_items(app.config["DB_PATH"])
+        checked = check_against_pantry(recipe, pantry_items)
+        changes, to_buy, errors = apply_cooking(checked, pantry_items, request.form)
+
+        if errors:
+            # Show the form again with your answers, so nothing has to be retyped.
+            return show_recipe(suggestion_id, recipe, pantry_items, form=request.form, errors=errors)
+
+        pantry_by_id = {item["id"]: item for item in pantry_items}
+        used_up = []
+        for pantry_id, new_quantity in changes.items():
+            item = pantry_by_id[pantry_id]
+            if new_quantity is None:
+                database.delete_item(app.config["DB_PATH"], pantry_id)
+                used_up.append(item["name"])
+            else:
+                item["quantity"] = new_quantity
+                database.update_item(app.config["DB_PATH"], pantry_id, item)
+
+        # Remember that it's been cooked, and what to buy.
+        recipe["cooked"] = {"at": datetime.now().isoformat(timespec="minutes"), "to_buy": to_buy}
+        database.update_suggestion(app.config["DB_PATH"], suggestion_id, recipe)
+
+        message = f"Pantry updated: {len(changes)} item{'s' if len(changes) != 1 else ''} changed."
+        if used_up:
+            message += " Used up and removed: " + ", ".join(used_up) + "."
+        flash(message)
+        return redirect(url_for("cooking_page", suggestion_id=suggestion_id))
+
+    @app.route("/recipes/<int:suggestion_id>/cooking")
+    def cooking_page(suggestion_id):
+        recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+        if recipe is None:
+            abort(404)
+        if "cooked" not in recipe:
+            return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
+        return render_template("cooking.html", recipe=recipe, suggestion_id=suggestion_id)
 
     # --- Add from photos (receipts, shelves, spice jars...) --------------
 

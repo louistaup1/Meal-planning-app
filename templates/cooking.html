@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Cooking {{ recipe.title }} · Pantry Chef{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('recipe_page', suggestion_id=suggestion_id) }}">← Back to the recipe</a></p>
+  <h1>👩‍🍳 {{ recipe.title }}</h1>
+  <p class="recipe-facts">⏱ {{ recipe.total_minutes }} min · serves {{ recipe.servings }}</p>
+
+  {% if recipe.cooked.to_buy %}
+    <h2>🛒 To buy</h2>
+    <ul class="tick-list to-buy">
+      {% for line in recipe.cooked.to_buy %}
+        <li><label><input type="checkbox"><span>{{ line }}</span></label></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="have-all">✅ Nothing to buy. You have everything!</p>
+  {% endif %}
+
+  <h2>Steps</h2>
+  <p class="hint">Tick each step as you go.</p>
+  <ol class="tick-list steps-to-tick">
+    {% for step in recipe.steps %}
+      <li><label><input type="checkbox"><span><strong>{{ loop.index }}.</strong> {{ step }}</span></label></li>
+    {% endfor %}
+  </ol>
+
+  <a href="{{ url_for('pantry_page') }}" class="button primary">🎉 Done, back to my pantry</a>
+{% endblock %}

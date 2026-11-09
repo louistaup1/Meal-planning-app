@@ -362,3 +362,66 @@ button[disabled] { opacity: 0.6; }
 .photo-item .row { gap: 10px; }
 .photo-item .row label:first-child { flex: 2; }
 .photo-item .note { margin: 8px 0 0; font-size: 15px; }
+
+/* ---------- Cooking ---------- */
+
+.cook-row {
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.cook-row.not-in-pantry { background: #ffe3ef; }
+.cook-row.is-off { background: #f1f1f1; }
+.item-form .cook-tick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.cook-tick input { width: 26px; height: 26px; flex: none; accent-color: var(--pink); }
+.item-form .cook-used {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px 38px;
+}
+.item-form .cook-used input { width: 110px; margin-top: 0; }
+.cook-note { margin: 4px 0 0 38px; font-size: 15px; }
+.start-cooking { display: block; width: 100%; font-size: 20px; background: var(--mint); margin: 20px 0; }
+
+.peek {
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 12px 16px;
+}
+.peek summary { font-weight: 800; cursor: pointer; }
+.peek .steps { border: none; box-shadow: none; padding: 12px 0 0 24px; }
+
+.tick-list {
+  list-style: none;
+  padding: 0;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  overflow: hidden;
+}
+.tick-list li { border-bottom: 2px dashed #cfcfcf; }
+.tick-list li:last-child { border-bottom: none; }
+.tick-list label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.tick-list input { width: 24px; height: 24px; flex: none; margin-top: 2px; accent-color: var(--pink); }
+.tick-list input:checked + span { text-decoration: line-through; color: var(--muted); }
+.to-buy { background: #ffe3ef; }
+.steps-to-tick { font-size: 18px; margin-bottom: 28px; }

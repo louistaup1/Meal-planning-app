@@ -11,25 +11,71 @@
   {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
   <p>{{ recipe.summary }}</p>
 
-  <h2>Ingredients</h2>
-  <ul class="ingredient-list">
-    {% for ingredient in recipe.ingredients %}
-      <li class="ingredient status-{{ ingredient.status }}">
-        <span>{{ format_quantity(ingredient.amount) }} {{ ingredient.unit }} {{ ingredient.name }}</span>
-        <span class="ingredient-status">
-          {% if ingredient.status == "have" %}✅ in pantry
-          {% elif ingredient.status == "low" %}⚠️ you may not have enough
-          {% elif ingredient.status == "assumed" %}basic staple
-          {% else %}🛒 to buy{% endif %}
-        </span>
-      </li>
+  {% if recipe.cooked %}
+    <p class="notice">You've already started cooking this.
+      <a href="{{ url_for('cooking_page', suggestion_id=recipe.id) }}">Open the steps and shopping list</a>.
+      Using the form below again will take ingredients off your pantry a second time.</p>
+  {% endif %}
+
+  <h2>What did you use?</h2>
+  <p class="hint">Tick what you have and check the amounts. Your pantry updates when you tap
+    <strong>Start cooking</strong>. Anything unticked goes on your shopping list.</p>
+
+  {% if errors %}
+    <ul class="errors">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('start_cooking_action', suggestion_id=recipe.id) }}" class="item-form">
+    {% for row in checklist %}
+      {% set n = row.index %}
+      {% if form %}
+        {% set has_it = form.get('have_' ~ n) is not none %}
+        {% set used = form.get('used_' ~ n, '') %}
+      {% else %}
+        {% set has_it = row.have %}
+        {% set used = row.used %}
+      {% endif %}
+      <div class="cook-row {% if not has_it %}is-off{% endif %} {% if not row.in_pantry %}not-in-pantry{% endif %}">
+        <label class="cook-tick">
+          <input type="checkbox" name="have_{{ n }}" {% if has_it %}checked{% endif %}>
+          <span>{{ row.recipe_amount }} {{ row.recipe_unit }} {{ row.name }}</span>
+        </label>
+        {% if row.in_pantry %}
+          <label class="cook-used">Used
+            <input type="text" name="used_{{ n }}" inputmode="decimal" value="{{ used }}"
+                   aria-label="Amount of {{ row.name }} used">
+            <span>{{ row.pantry_unit }}</span>
+          </label>
+          <p class="hint cook-note">
+            You have {{ row.pantry_quantity }} {{ row.pantry_unit }}{% if row.pantry_name|lower != row.name|lower %} ({{ row.pantry_name }}){% endif %}.
+            {% if not row.used and not form %}The recipe says {{ row.recipe_amount }} {{ row.recipe_unit }}, so enter what you'll use in {{ row.pantry_unit or "your pantry's unit" }}.{% endif %}
+          </p>
+        {% else %}
+          <p class="hint cook-note">🛒 Not in your pantry. Tick it if you have it anyway.</p>
+        {% endif %}
+      </div>
     {% endfor %}
-  </ul>
 
-  <h2>Steps</h2>
-  <ol class="steps">
-    {% for step in recipe.steps %}<li>{{ step }}</li>{% endfor %}
-  </ol>
+    {% if staples %}
+      <p class="hint">Also needed, assumed you have: {{ staples | join(", ") }}.</p>
+    {% endif %}
 
-  <p class="hint">Coming in the next version: confirm what you used, so your pantry updates automatically.</p>
+    <button type="submit" class="button primary start-cooking">👩‍🍳 Start cooking</button>
+  </form>
+
+  <details class="peek">
+    <summary>Peek at the steps</summary>
+    <ol class="steps">
+      {% for step in recipe.steps %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+  </details>
+
+  <script>
+    // Grey out a row when it's unticked, so it's clear it goes on the shopping list.
+    document.querySelectorAll(".cook-tick input").forEach(function (box) {
+      box.addEventListener("change", function () {
+        box.closest(".cook-row").classList.toggle("is-off", !box.checked);
+      });
+    });
+  </script>
 {% endblock %}

@@ -140,6 +140,15 @@ def get_suggestion(db_path, suggestion_id):
     return json.loads(row["recipe_json"])
 
 
+def update_suggestion(db_path, suggestion_id, recipe):
+    """Save changes to a suggested recipe (for example, that you've cooked it)."""
+    with connect(db_path) as connection:
+        connection.execute(
+            "UPDATE suggestions SET recipe_json = ? WHERE id = ?",
+            (json.dumps(recipe), suggestion_id),
+        )
+
+
 # --- My recipes ---------------------------------------------------------------
 
 def add_my_recipe(db_path, title, text):

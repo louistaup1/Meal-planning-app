@@ -96,7 +96,9 @@ def test_recipe_page_shows_steps_and_what_to_buy(tmp_path):
 
     page = client.get("/recipes/1")
     assert b"Boil the pasta." in page.data
-    assert b"to buy" in page.data
+    assert b"What did you use?" in page.data
+    assert b"Not in your pantry" in page.data            # fresh parsley
+    assert b"assumed you have: Salt" in page.data
     assert client.get("/recipes/999").status_code == 404
 
 

@@ -8,7 +8,7 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - Add, edit and remove pantry items.
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
-- Items that expire within 3 days are highlighted in yellow. Expired items are highlighted in red.
+- Items that expire within 3 days get a yellow **USE ME!** sticker. Expired items get a red **UH-OH**.
 - **Add from photos:** take or choose up to 5 photos or PDFs: a paper receipt, an email
   receipt saved as a PDF, a fridge or cupboard shelf, or spice jars. Claude lists the food it can see (name, category, quantity, unit).
   You check and fix the list before anything is added. Items you already have, with the
@@ -17,10 +17,11 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
   ideas when suggesting dinner, and marks them "From my recipes".
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
   by cuisine, difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
-  time, the difficulty and what you're missing. Tap **Cook this** to see the ingredients and steps.
-
-**Coming next:** the cook flow (milestone 3). You'll confirm what you used, and your pantry
-will update automatically.
+  time, the difficulty and what you're missing. **Back to suggestions** shows your last
+  suggestions again for free (no new request to Claude).
+- **Cook flow:** tap **Cook this**, then tick what you have and check the amounts used.
+  **Start cooking** updates your pantry (items that are used up are removed), then shows
+  the steps to tick off and a **To buy** list of anything you didn't have.
 
 ---
 
@@ -61,7 +62,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `69 passed`.
+    You should see a line like `86 passed`.
 
 ### Part C: Create your secret settings file (.env)
 
@@ -173,6 +174,7 @@ Your pantry data is in `pantry.db`. Updates never overwrite it.
 | `app.py` | The web pages and what happens when you tap buttons |
 | `auth.py` | Checks the app password |
 | `pantry.py` | Pantry rules: categories, checking the form, "expiring soon" |
+| `cooking.py` | Cook-flow rules: the "What did you use?" checklist, pantry updates, to-buy list |
 | `recipes.py` | Recipe rules: filters, the request sent to Claude, finding missing ingredients |
 | `ai_client.py` | The only file that talks to Claude. The model name is set at the top |
 | `photos.py` | Shrinks photos before they're sent to Claude |
