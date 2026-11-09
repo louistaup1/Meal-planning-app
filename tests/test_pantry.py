@@ -3,6 +3,8 @@
 from datetime import date
 
 from pantry import (
+    CATEGORIES,
+    CATEGORY_EMOJI,
     expiry_status,
     format_quantity,
     group_by_category,
@@ -102,3 +104,7 @@ def test_group_by_category_follows_category_order_and_sorts_names():
     groups = group_by_category(items)
     assert [category for category, _ in groups] == ["Dry pantry", "Dairy"]
     assert [item["name"] for item in groups[1][1]] == ["Butter", "milk"]
+
+
+def test_every_category_has_an_emoji():
+    assert set(CATEGORY_EMOJI) == set(CATEGORIES)

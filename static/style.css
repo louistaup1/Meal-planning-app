@@ -1,63 +1,116 @@
-/* Pantry Chef styles: simple, large tap targets, works on phone and iPad. */
+/*
+  Pantry Chef: "Sticker Book" design in "Candy Pop" colours.
+  Thick black outlines, hard shadows and bright pastels.
+  All the colours are named here at the top, so they're easy to change.
+*/
 
 :root {
-  --background: #faf7f2;
+  /* Page */
+  --background: #fffaf0;
+  --dots: #e6dccb;
   --card: #ffffff;
-  --text: #2b2b2b;
-  --muted: #6b6b6b;
-  --accent: #c2410c;
-  --border: #e5e0d8;
-  --soon: #fff4d6;
-  --soon-border: #e0a800;
-  --expired: #fde2e2;
-  --expired-border: #c53030;
+  --text: #111111;
+  --muted: #4a4a4a;
+  --outline: #111111;
+
+  /* Main colours */
+  --purple: #9b5de5;
+  --pink: #f15bb5;
+  --mint: #00f5d4;
+  --yellow: #fee440;
+  --red: #ff5d5d;
+  --green: #2b9348;
+
+  /* One pastel per pantry category */
+  --dry-pantry: #fbd3ec;
+  --vegetables: #c9fff5;
+  --fruits: #ffd9c7;
+  --spices: #ccefff;
+  --dairy: #fff6b8;
+  --proteins: #e6d6fb;
+  --other: #e8f0d0;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 17px;
-  background: var(--background);
   color: var(--text);
+  background-color: var(--background);
+  background-image: radial-gradient(var(--dots) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
 }
 
+h1, h2, .logo, .recipe-title {
+  font-family: "Fredoka", "Nunito", sans-serif;
+}
+
+a { color: var(--purple); font-weight: 700; }
+
+/* ---------- Top bar ---------- */
+
 .top-bar {
-  background: var(--accent);
+  background: var(--purple);
+  border-bottom: 4px solid var(--outline);
   padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+.logo {
+  display: inline-block;
+  background: var(--yellow);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 3px solid var(--outline);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--outline);
+  transform: rotate(-2deg);
 }
 .top-bar form { margin: 0; }
 .top-links { display: flex; align-items: center; gap: 16px; }
-.top-links a { color: white; text-decoration: none; font-size: 15px; }
+.top-links a { color: white; text-decoration: none; font-size: 15px; font-weight: 800; }
 .logout {
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 6px;
+  border: 2px solid white;
+  border-radius: 10px;
   color: white;
   font-family: inherit;
   font-size: 15px;
+  font-weight: 800;
   padding: 6px 10px;
   cursor: pointer;
 }
-.logo {
-  color: white;
-  font-weight: 700;
-  font-size: 20px;
-  text-decoration: none;
-}
+
+/* ---------- Page layout ---------- */
 
 main {
   max-width: 640px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 16px 48px;
 }
 
-h1 { font-size: 26px; margin: 8px 0 16px; }
-h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 24px 0 8px; }
+h1 { font-size: 32px; font-weight: 700; margin: 12px 0 16px; }
+
+h2 {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 999px;
+  padding: 4px 14px;
+  box-shadow: 3px 3px 0 var(--outline);
+  margin: 24px 0 12px;
+}
 
 .page-heading {
   display: flex;
@@ -66,29 +119,64 @@ h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: 
   gap: 12px;
 }
 
-.notice {
-  background: #e6f4ea;
-  border: 1px solid #9fd3ad;
-  padding: 10px 12px;
-  border-radius: 8px;
-}
+.hint { font-weight: 400; color: var(--muted); }
+.empty { color: var(--muted); font-weight: 700; }
+
+/* Messages */
+.notice,
 .errors,
 .errors-box {
-  background: var(--expired);
-  border: 1px solid var(--expired-border);
-  padding: 10px 12px 10px 32px;
-  border-radius: 8px;
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 10px 14px;
+  font-weight: 700;
 }
-.errors-box { padding: 10px 12px; }
-.empty { color: var(--muted); }
+.notice { background: var(--mint); }
+.errors,
+.errors-box { background: #ffd6d6; }
+.errors { padding-left: 34px; }
 
-/* Pantry list */
+/* ---------- Buttons ---------- */
+
+.button {
+  display: inline-block;
+  padding: 12px 18px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  cursor: pointer;
+}
+.button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--outline); }
+.button.primary { background: var(--pink); }
+.button.danger { background: #ffd6d6; }
+button[disabled] { opacity: 0.6; }
+
+.cook-tonight,
+.secondary-wide {
+  display: block;
+  text-align: center;
+  margin: 12px 0;
+}
+.cook-tonight { background: var(--mint); font-size: 19px; }
+.secondary-wide { background: var(--yellow); }
+
+/* ---------- Pantry list ---------- */
+
 .item-list { list-style: none; margin: 0; padding: 0; }
 .item {
+  position: relative;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 8px;
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  margin-bottom: 12px;
 }
 .item-link {
   display: flex;
@@ -97,126 +185,167 @@ h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: 
   gap: 4px 12px;
   padding: 14px 16px;
   color: inherit;
+  font-weight: 400;
   text-decoration: none;
 }
-.item-name { font-weight: 600; }
+.item-name { font-weight: 800; }
 .item-amount { color: var(--muted); }
 .item-expiry { width: 100%; font-size: 14px; color: var(--muted); }
 
-.status-soon { background: var(--soon); border-color: var(--soon-border); }
-.status-soon .item-expiry { color: #8a6100; font-weight: 600; }
-.status-expired { background: var(--expired); border-color: var(--expired-border); }
-.status-expired .item-expiry { color: var(--expired-border); font-weight: 600; }
+/* Each category keeps its own colour */
+.category-dry-pantry .item { background: var(--dry-pantry); }
+.category-vegetables .item { background: var(--vegetables); }
+.category-fruits .item { background: var(--fruits); }
+.category-spices .item { background: var(--spices); }
+.category-dairy .item { background: var(--dairy); }
+.category-proteins .item { background: var(--proteins); }
+.category-other .item { background: var(--other); }
 
-/* Forms */
+/* "USE ME!" and "UH-OH" stickers on items that expire soon or have expired */
+.status-soon .item-expiry,
+.status-expired .item-expiry { color: var(--text); font-weight: 800; }
+.status-soon::after,
+.status-expired::after {
+  position: absolute;
+  right: -8px;
+  top: -12px;
+  font: 700 12px "Fredoka", sans-serif;
+  padding: 2px 8px;
+  border: 2px solid var(--outline);
+  border-radius: 8px;
+  transform: rotate(6deg);
+}
+.status-soon::after { content: "USE ME!"; background: var(--yellow); }
+.status-expired::after { content: "UH-OH"; background: var(--red); }
+
+/* ---------- Forms ---------- */
+
 .item-form label {
   display: block;
-  font-weight: 600;
+  font-weight: 800;
   margin-bottom: 16px;
 }
 .item-form input,
-.item-form select {
+.item-form select,
+.item-form textarea {
   display: block;
   width: 100%;
   margin-top: 6px;
   padding: 12px;
+  font-family: inherit;
   font-size: 17px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  font-weight: 700;
+  color: var(--text);
   background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 12px;
 }
+.item-form input:focus,
+.item-form select:focus,
+.item-form textarea:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--purple);
+}
+.item-form textarea { min-height: 220px; font-weight: 400; }
 .row { display: flex; gap: 12px; }
 .row label { flex: 1; }
-.hint { font-weight: 400; color: var(--muted); }
-
 .form-buttons { display: flex; gap: 12px; margin-bottom: 32px; }
 
-/* Buttons */
-.button {
-  display: inline-block;
-  padding: 12px 18px;
-  font-size: 17px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  text-decoration: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-.button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
-.button.danger { color: var(--expired-border); border-color: var(--expired-border); }
+/* ---------- Dinner suggestions ---------- */
 
-/* Dinner suggestions */
-a { color: var(--accent); }
-.cook-tonight {
-  display: block;
-  text-align: center;
-  font-weight: 600;
-  margin: 8px 0 8px;
-  border-color: var(--accent);
-  color: var(--accent);
-}
 .filters .row { flex-wrap: wrap; }
 .filters .row label { min-width: 120px; }
-.thinking { color: var(--muted); font-style: italic; }
-button[disabled] { opacity: 0.6; }
+.thinking { color: var(--muted); font-weight: 700; }
 
 .recipe-card {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 3px solid var(--outline);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 var(--outline);
   padding: 16px;
-  margin: 16px 0;
+  margin: 24px 0;
 }
+.recipe-card:nth-of-type(odd) { transform: rotate(-0.6deg); }
+.recipe-card:nth-of-type(even) { transform: rotate(0.6deg); }
 .recipe-card .recipe-title {
+  display: inline-block;
   font-size: 21px;
   text-transform: none;
   letter-spacing: 0;
-  color: var(--text);
-  margin: 0 0 4px;
+  margin: 0 0 8px;
 }
-.recipe-facts { color: var(--muted); margin: 0 0 8px; }
-.missing { color: #8a6100; font-weight: 600; }
-.have-all { color: #1e7b3a; font-weight: 600; }
+.recipe-facts { color: var(--muted); margin: 0 0 8px; font-weight: 700; }
+.missing { color: #d6336c; font-weight: 800; }
+.have-all { color: var(--green); font-weight: 800; }
+.from-mine {
+  display: inline-block;
+  background: var(--yellow);
+  border: 2px solid var(--outline);
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
 
-.ingredient-list { list-style: none; padding: 0; }
+/* Recipe page */
+.ingredient-list {
+  list-style: none;
+  padding: 0;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  overflow: hidden;
+}
 .ingredient {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 4px 12px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 14px;
+  border-bottom: 2px dashed #cfcfcf;
 }
-.ingredient-status { color: var(--muted); font-size: 15px; }
-.ingredient.status-missing .ingredient-status { color: #8a6100; font-weight: 600; }
-.ingredient.status-low .ingredient-status { color: #8a6100; }
-.steps li { margin-bottom: 12px; line-height: 1.45; }
-
-/* My recipes */
-.from-mine { color: var(--accent); font-weight: 600; margin: 0 0 8px; }
-.item-form textarea {
-  display: block;
-  width: 100%;
-  min-height: 220px;
-  margin-top: 6px;
-  padding: 12px;
-  font-size: 16px;
-  font-family: inherit;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+.ingredient:last-child { border-bottom: none; }
+.ingredient-status { color: var(--muted); font-size: 15px; font-weight: 700; }
+.ingredient.status-missing { background: #ffe3ef; }
+.ingredient.status-missing .ingredient-status { color: #d6336c; font-weight: 800; }
+.ingredient.status-low .ingredient-status { color: #b06a00; }
+.steps {
   background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 16px 16px 4px 44px;
 }
-.saved-recipe-text { white-space: pre-wrap; line-height: 1.45; background: var(--card);
-  border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.steps li { margin-bottom: 12px; line-height: 1.45; }
+.steps li::marker { font-family: "Fredoka", sans-serif; font-weight: 700; color: var(--purple); }
 
-/* Spices from photos */
-.secondary-wide { display: block; text-align: center; margin: 0 0 8px; }
-.spice-choice {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 16px; margin-bottom: 8px; font-weight: 600;
+/* ---------- My recipes ---------- */
+
+.saved-recipe-text {
+  white-space: pre-wrap;
+  line-height: 1.45;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 16px;
 }
-.spice-choice input { width: 22px; height: 22px; }
+.my-recipes-list .item { background: var(--proteins); }
+
+/* ---------- Spices from photos ---------- */
+
+.spice-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--spices);
+  border: 3px solid var(--outline);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--outline);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+.spice-choice input { width: 24px; height: 24px; accent-color: var(--pink); }
 .spice-choice .hint { font-weight: 400; }

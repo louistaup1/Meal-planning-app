@@ -18,8 +18,8 @@
   {% endif %}
 
   {% for category, items in groups %}
-    <section class="category">
-      <h2>{{ category }}</h2>
+    <section class="category category-{{ category | lower | replace(' ', '-') }}">
+      <h2>{{ category_emoji[category] }} {{ category }}</h2>
       <ul class="item-list">
         {% for item in items %}
           {% set status = expiry_status(item.expiry_date) %}

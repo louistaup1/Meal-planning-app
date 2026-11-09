@@ -29,6 +29,7 @@ from recipes import (
 )
 from pantry import (
     CATEGORIES,
+    CATEGORY_EMOJI,
     SUGGESTED_UNITS,
     expiry_status,
     format_quantity,
@@ -82,6 +83,7 @@ def create_app(
     # Make these helpers usable inside the HTML templates.
     app.jinja_env.globals["expiry_status"] = expiry_status
     app.jinja_env.globals["format_quantity"] = format_quantity
+    app.jinja_env.globals["category_emoji"] = CATEGORY_EMOJI
 
     # --- Password lock -----------------------------------------------------
 

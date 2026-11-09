@@ -20,6 +20,17 @@ CATEGORIES = [
     "Other",
 ]
 
+# A little picture for each category, shown on the pantry page.
+CATEGORY_EMOJI = {
+    "Dry pantry": "🥫",
+    "Vegetables": "🥕",
+    "Fruits": "🍎",
+    "Spices": "🌶️",
+    "Dairy": "🧀",
+    "Proteins": "🍗",
+    "Other": "🧺",
+}
+
 # Common units, offered as suggestions in the form. You can still type any unit.
 SUGGESTED_UNITS = ["pieces", "g", "kg", "ml", "L", "cans", "jars", "packs", "bunches", "tbsp", "tsp"]
 

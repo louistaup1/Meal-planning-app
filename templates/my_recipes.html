@@ -8,7 +8,7 @@
     "What should I cook tonight?", so it can suggest them too.</p>
 
   {% if my_recipes %}
-    <ul class="item-list">
+    <ul class="item-list my-recipes-list">
       {% for recipe in my_recipes %}
         <li class="item">
           <a href="{{ url_for('my_recipe_page', recipe_id=recipe.id) }}" class="item-link">
