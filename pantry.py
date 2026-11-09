@@ -136,27 +136,79 @@ def group_by_category(items):
     return groups
 
 
-def plan_spice_additions(spice_names, pantry_items):
-    """
-    Tidy up the spice names read from photos, ready for you to review.
+def find_by_name(name, pantry_items):
+    """Find a pantry item with the same name, ignoring capital letters. Returns None if there isn't one."""
+    key = name.strip().lower()
+    for item in pantry_items:
+        if item["name"].strip().lower() == key:
+            return item
+    return None
 
-    Removes blanks and duplicates (ignoring capital letters), and marks
-    any spice that's already in your pantry. Returns a list like:
-      [{"name": "Paprika", "already_have": False}, ...]
+
+def same_unit(unit_a, unit_b):
+    return unit_a.strip().lower() == unit_b.strip().lower()
+
+
+def plan_photo_additions(found_items, pantry_items):
     """
-    pantry_names = {item["name"].strip().lower() for item in pantry_items}
-    seen = set()
-    plan = []
-    for name in spice_names:
-        name = name.strip()[:100]
-        key = name.lower()
-        if name == "" or key in seen:
+    Tidy up the items Claude found in photos, ready for you to review.
+
+    - Fixes anything odd (unknown category becomes "Other", a missing quantity becomes 1).
+    - Combines duplicates with the same name and unit.
+    - Compares with your pantry:
+        same name and unit   -> ticked, will top up the existing item
+        same name, new unit  -> unticked, with a note, so you decide
+        not in pantry        -> ticked, will be added
+    Returns a list of dictionaries: name, category, quantity, unit, include, note.
+    """
+    combined = []
+    for found in found_items:
+        name = str(found.get("name", "")).strip()[:100]
+        if name == "":
             continue
-        seen.add(key)
-        plan.append({"name": name, "already_have": key in pantry_names})
+        category = found.get("category") if found.get("category") in CATEGORIES else "Other"
+        try:
+            quantity = float(found.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1.0
+        if quantity <= 0:
+            quantity = 1.0
+        unit = str(found.get("unit", "")).strip()[:20]
+
+        duplicate = next(
+            (c for c in combined if c["name"].lower() == name.lower() and same_unit(c["unit"], unit)),
+            None,
+        )
+        if duplicate:
+            duplicate["quantity"] += quantity
+        else:
+            combined.append({"name": name, "category": category, "quantity": quantity, "unit": unit})
+
+    plan = []
+    for item in combined:
+        existing = find_by_name(item["name"], pantry_items)
+        if existing is None:
+            item["include"] = True
+            item["note"] = ""
+        elif same_unit(existing["unit"], item["unit"]):
+            item["include"] = True
+            item["note"] = (f"You have {format_quantity(existing['quantity'])} {existing['unit']}. "
+                            "This will be added to it.")
+        else:
+            item["include"] = False
+            item["note"] = (f"Already in your pantry as {format_quantity(existing['quantity'])} "
+                            f"{existing['unit']}. Tick to add it as a separate item.")
+        item["quantity"] = format_quantity(item["quantity"])
+        plan.append(item)
     return plan
 
 
-def new_spice_item(name):
-    """A pantry item for a spice added from a photo. Quantities are ignored, so it's 1 jar."""
-    return {"name": name, "category": "Spices", "quantity": 1.0, "unit": "jars", "expiry_date": None}
+def top_up_target(item, pantry_items):
+    """
+    If the pantry already has this item with the same unit, return that pantry item,
+    so we add to its quantity instead of creating a duplicate. Otherwise return None.
+    """
+    existing = find_by_name(item["name"], pantry_items)
+    if existing is not None and same_unit(existing["unit"], item["unit"]):
+        return existing
+    return None

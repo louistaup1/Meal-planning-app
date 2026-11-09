@@ -15,6 +15,8 @@ from typing import Literal, Optional
 import anthropic
 from pydantic import BaseModel
 
+from pantry import CATEGORIES
+
 # The Claude model used for suggestions. Change this one line to switch models.
 MODEL = "claude-opus-5-5"
 
@@ -46,8 +48,15 @@ class Suggestions(BaseModel):
     recipes: list[Recipe]
 
 
-class SpiceList(BaseModel):
-    spices: list[str]
+class PhotoItem(BaseModel):
+    name: str
+    category: Literal[tuple(CATEGORIES)]  # one of the pantry categories
+    quantity: float
+    unit: str
+
+
+class PhotoItems(BaseModel):
+    items: list[PhotoItem]
 
 
 INSTRUCTIONS = """You are a friendly home-cooking assistant. You suggest dinner recipes \
@@ -82,13 +91,26 @@ class SuggestionError(Exception):
     """A problem getting suggestions, with a message that's safe to show on screen."""
 
 
-SPICE_INSTRUCTIONS = """You read spice labels from photos for a pantry app.
+PHOTO_INSTRUCTIONS = """You help someone fill in their kitchen pantry app from photos.
 
-List every spice, dried herb, spice blend or seasoning whose label you can read in the photos.
-- Use the common English name in sentence case, for example "Smoked paprika" or "Herbes de Provence".
-- List each spice once, even if it appears in several photos.
-- Skip anything you can't read clearly. Don't guess.
-- Skip things that aren't spices or seasonings (for example oil, vinegar or flour)."""
+The photos may show a shop receipt, fridge or cupboard shelves, spice jars, or shopping bags.
+List every food or drink item you can identify, so it can be added to the pantry.
+
+For each item:
+- name: a short, friendly name in sentence case, for example "Cherry tomatoes" or "Smoked paprika".
+  Receipts use abbreviations ("ORG CHRY TOM 250G"); write the full everyday name instead.
+  Leave out brand names unless they matter (for example "Greek yogurt", not "Fage Total 0%").
+- category: the best fit from the list given.
+- quantity and unit: how much there is.
+  - On a receipt, use the size and how many were bought. "MILK 1L x2" is quantity 2, unit "L".
+    If only a count is shown, use "pieces", "packs", "cans" or "jars" as fits.
+  - On shelves or in photos of jars, count what you can see, for example 3 "jars" or 6 "pieces".
+  - Prefer these units: pieces, g, kg, ml, L, cans, jars, packs, bunches.
+
+Other rules:
+- Skip anything that isn't food or drink (cleaning products, toiletries, bags, discounts, totals).
+- If the same item appears more than once, list it once with the total quantity.
+- Skip anything you can't read or recognise clearly. Don't guess."""
 
 
 def suggest_recipes(request_text):
@@ -107,10 +129,11 @@ def suggest_recipes(request_text):
     return [recipe.model_dump() for recipe in result.recipes]
 
 
-def read_spices_from_photos(jpeg_photos):
+def read_items_from_photos(jpeg_photos):
     """
-    Ask Claude which spices it can see in some photos (each one JPEG bytes).
-    Returns a list of spice names.
+    Ask Claude which food items it can see in some photos (each one JPEG bytes):
+    receipts, shelves, spice jars and so on.
+    Returns a list of dictionaries with name, category, quantity and unit.
     """
     content = []
     for photo in jpeg_photos:
@@ -122,15 +145,19 @@ def read_spices_from_photos(jpeg_photos):
                 "data": base64.standard_b64encode(photo).decode("utf-8"),
             },
         })
-    content.append({"type": "text", "text": "Which spices can you see in these photos?"})
+    categories = ", ".join(CATEGORIES)
+    content.append({
+        "type": "text",
+        "text": f"Which food items can you see in these photos? Categories to choose from: {categories}.",
+    })
 
     result = _ask_claude(
-        instructions=SPICE_INSTRUCTIONS,
+        instructions=PHOTO_INSTRUCTIONS,
         content=content,
-        output_format=SpiceList,
-        effort="low",
+        output_format=PhotoItems,
+        effort="medium",
     )
-    return result.spices
+    return [item.model_dump() for item in result.items]
 
 
 def _ask_claude(instructions, content, output_format, effort):

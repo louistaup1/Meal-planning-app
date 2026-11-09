@@ -333,19 +333,32 @@ button[disabled] { opacity: 0.6; }
 }
 .my-recipes-list .item { background: var(--proteins); }
 
-/* ---------- Spices from photos ---------- */
+/* ---------- Add from photos ---------- */
 
-.spice-choice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--spices);
+.button-hint { display: block; font-size: 14px; font-weight: 700; }
+.photo-tips { padding-left: 22px; }
+.photo-tips li { margin-bottom: 6px; }
+
+.photo-item {
+  background: var(--card);
   border: 3px solid var(--outline);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--outline);
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  font-weight: 800;
+  padding: 12px 14px;
+  margin-bottom: 14px;
 }
-.spice-choice input { width: 24px; height: 24px; accent-color: var(--pink); }
-.spice-choice .hint { font-weight: 400; }
+.photo-item.is-off { background: #f1f1f1; }
+.photo-item .include {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.photo-item .include input[type="checkbox"] {
+  width: 26px; height: 26px; margin: 0; flex: none; accent-color: var(--pink);
+}
+.photo-item .include input[type="text"] { margin-top: 0; }
+.photo-item label { margin-bottom: 0; }
+.photo-item .row { gap: 10px; }
+.photo-item .row label:first-child { flex: 2; }
+.photo-item .note { margin: 8px 0 0; font-size: 15px; }

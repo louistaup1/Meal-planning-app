@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Check the items · Pantry Chef{% endblock %}
+
+{% block content %}
+  <h1>Check the items</h1>
+  <p>Untick anything you don't want, and fix any names or amounts. Nothing is added until you tap
+    <strong>Add to pantry</strong>.</p>
+
+  <form method="post" action="{{ url_for('add_photo_items_action') }}" class="item-form">
+    <input type="hidden" name="count" value="{{ plan | length }}">
+
+    {% for item in plan %}
+      {% set n = loop.index0 %}
+      <div class="photo-item {% if not item.include %}is-off{% endif %}">
+        <div class="include">
+          <input type="checkbox" name="include_{{ n }}" aria-label="Add {{ item.name }}"
+                 {% if item.include %}checked{% endif %}>
+          <input type="text" name="name_{{ n }}" value="{{ item.name }}" aria-label="Name">
+        </div>
+        <div class="row">
+          <label>Category
+            <select name="category_{{ n }}">
+              {% for category in categories %}
+                <option value="{{ category }}" {% if item.category == category %}selected{% endif %}>
+                  {{ category_emoji[category] }} {{ category }}
+                </option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Quantity
+            <input type="text" name="quantity_{{ n }}" inputmode="decimal" value="{{ item.quantity }}">
+          </label>
+          <label>Unit
+            <input type="text" name="unit_{{ n }}" value="{{ item.unit }}">
+          </label>
+        </div>
+        {% if item.note %}<p class="note hint">{{ item.note }}</p>{% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="form-buttons">
+      <button type="submit" class="button primary">Add to pantry</button>
+      <a href="{{ url_for('pantry_page') }}" class="button">Cancel</a>
+    </div>
+  </form>
+
+  <script>
+    // Grey out an item when it's unticked, so it's clear it won't be added.
+    document.querySelectorAll(".photo-item .include input[type=checkbox]").forEach(function (box) {
+      box.addEventListener("change", function () {
+        box.closest(".photo-item").classList.toggle("is-off", !box.checked);
+      });
+    });
+  </script>
+{% endblock %}

@@ -34,8 +34,8 @@ from pantry import (
     expiry_status,
     format_quantity,
     group_by_category,
-    new_spice_item,
-    plan_spice_additions,
+    plan_photo_additions,
+    top_up_target,
     validate_item,
 )
 
@@ -52,11 +52,11 @@ def create_app(
     db_path=DEFAULT_DB_PATH,
     password=None,
     suggest_recipes=ai_client.suggest_recipes,
-    read_spices=ai_client.read_spices_from_photos,
+    read_photo_items=ai_client.read_items_from_photos,
 ):
     """
     Build the app. Tests pass their own `password` and pretend versions of
-    `suggest_recipes` and `read_spices`, so they never call the real Claude API.
+    `suggest_recipes` and `read_photo_items`, so they never call the real Claude API.
     """
     app = Flask(__name__)
     # Allow photo uploads up to 50 MB in total.
@@ -240,10 +240,10 @@ def create_app(
         recipe = check_against_pantry(recipe, pantry_items)
         return render_template("recipe.html", recipe=recipe)
 
-    # --- Spices from photos -----------------------------------------------
+    # --- Add from photos (receipts, shelves, spice jars...) --------------
 
-    @app.route("/spices/photos", methods=["GET", "POST"])
-    def spice_photos_page():
+    @app.route("/photos", methods=["GET", "POST"])
+    def photo_import_page():
         error = None
         if request.method == "POST":
             uploads = [f for f in request.files.getlist("photos") if f.filename]
@@ -254,28 +254,55 @@ def create_app(
             else:
                 try:
                     photos = [prepare_photo(f.read(), f.filename) for f in uploads]
-                    spice_names = read_spices(photos)
+                    found_items = read_photo_items(photos)
                 except (PhotoError, ai_client.SuggestionError) as problem:
                     error = str(problem)
                 else:
                     pantry_items = database.get_all_items(app.config["DB_PATH"])
-                    plan = plan_spice_additions(spice_names, pantry_items)
+                    plan = plan_photo_additions(found_items, pantry_items)
                     if not plan:
-                        error = "Claude couldn't read any spice labels. Try a closer, brighter photo."
+                        error = "Claude couldn't find any food items. Try a closer, brighter photo."
                     else:
-                        return render_template("spice_review.html", plan=plan)
-        return render_template("spice_photos.html", error=error, max_photos=MAX_PHOTOS)
+                        return render_template("photo_review.html", plan=plan, categories=CATEGORIES)
+        return render_template("photo_import.html", error=error, max_photos=MAX_PHOTOS)
 
-    @app.route("/spices/add", methods=["POST"])
-    def add_spices_action():
-        pantry_items = database.get_all_items(app.config["DB_PATH"])
-        plan = plan_spice_additions(request.form.getlist("spice"), pantry_items)
-        added = 0
-        for spice in plan:
-            if not spice["already_have"]:
-                database.add_item(app.config["DB_PATH"], new_spice_item(spice["name"]))
+    @app.route("/photos/add", methods=["POST"])
+    def add_photo_items_action():
+        added, topped_up, skipped = 0, 0, []
+        count = min(int(request.form.get("count", 0) or 0), 200)
+
+        for number in range(count):
+            if request.form.get(f"include_{number}") is None:
+                continue  # unticked
+            item, errors = validate_item({
+                "name": request.form.get(f"name_{number}", ""),
+                "category": request.form.get(f"category_{number}", ""),
+                "quantity": request.form.get(f"quantity_{number}", ""),
+                "unit": request.form.get(f"unit_{number}", ""),
+                "expiry_date": "",
+            })
+            if errors:
+                skipped.append(item["name"] or f"item {number + 1}")
+                continue
+
+            # Re-read the pantry each time, so two rows for the same item add up correctly.
+            pantry_items = database.get_all_items(app.config["DB_PATH"])
+            existing = top_up_target(item, pantry_items)
+            if existing:
+                existing["quantity"] += item["quantity"]
+                database.update_item(app.config["DB_PATH"], existing["id"], existing)
+                topped_up += 1
+            else:
+                database.add_item(app.config["DB_PATH"], item)
                 added += 1
-        flash("Added 1 spice." if added == 1 else f"Added {added} spices.")
+
+        message = f"Added {added} new item{'s' if added != 1 else ''}"
+        if topped_up:
+            message += f" and topped up {topped_up}"
+        message += "."
+        if skipped:
+            message += " Skipped (please check the quantity): " + ", ".join(skipped) + "."
+        flash(message)
         return redirect(url_for("pantry_page"))
 
     # --- My recipes --------------------------------------------------------

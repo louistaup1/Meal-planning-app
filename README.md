@@ -9,8 +9,10 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
 - Items that expire within 3 days are highlighted in yellow. Expired items are highlighted in red.
-- **Add spices from photos:** take or choose up to 5 photos of your spice jars. Claude reads
-  the labels, and you tick which spices to add. Each is added as 1 jar.
+- **Add from photos:** take or choose up to 5 photos of a receipt, a fridge or cupboard
+  shelf, or spice jars. Claude lists the food it can see (name, category, quantity, unit).
+  You check and fix the list before anything is added. Items you already have, with the
+  same unit, are topped up instead of duplicated.
 - **My recipes:** paste your own recipes (any layout). Claude considers them alongside new
   ideas when suggesting dinner, and marks them "From my recipes".
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
@@ -59,7 +61,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `58 passed`.
+    You should see a line like `64 passed`.
 
 ### Part C: Create your secret settings file (.env)
 
@@ -129,7 +131,7 @@ then tap **Reload** on the **Web** tab.
 
 The suggestions and the spice photos use Claude, Anthropic's AI. This is pay-as-you-go:
 each tap on **Suggest** costs roughly 5–10 US cents (about 1 cent more for every 10 saved
-recipes), and reading spice photos costs about 1–3 cents per photo.
+recipes), and reading photos costs about 2–4 cents per photo.
 
 1. In Safari, go to **console.anthropic.com** and create an account.
 2. Open **Settings → Billing** and add credit. $5 is plenty to start.
