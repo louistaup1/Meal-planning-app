@@ -5,23 +5,24 @@
 {% block content %}
   <p><a href="{{ url_for('pantry_page') }}">← Back to my pantry</a></p>
   <h1>Add from photos</h1>
-  <p>Take or choose up to {{ max_photos }} photos. Claude will list the food it can see,
+  <p>Take or choose up to {{ max_photos }} photos or PDFs. Claude will list the food it can see,
     and you can check and fix the list before anything is added.</p>
   <ul class="photo-tips">
-    <li>🧾 <strong>Receipts:</strong> lay it flat in good light. For a long receipt, take two photos (top half, bottom half).</li>
+    <li>🧾 <strong>Paper receipts:</strong> lay it flat in good light. For a long receipt, take two photos (top half, bottom half).</li>
+    <li>📧 <strong>Email receipts (PDF):</strong> save the PDF to the Files app first (open it in Mail, tap Share, then <em>Save to Files</em>), then choose it here.</li>
     <li>🧊 <strong>Fridge or cupboard:</strong> one shelf per photo works best.</li>
     <li>🌶️ <strong>Spices:</strong> turn the labels to face the camera.</li>
   </ul>
-  <p class="hint">Costs about 2–4 cents per photo.</p>
+  <p class="hint">Costs about 2–4 cents per photo or PDF page.</p>
 
   {% if error %}<p class="errors-box">{{ error }}</p>{% endif %}
 
   <form method="post" enctype="multipart/form-data" class="item-form" id="photo-form">
-    <label>Photos
-      <input type="file" name="photos" accept="image/*" multiple required>
+    <label>Photos or PDFs
+      <input type="file" name="photos" accept="image/*,application/pdf,.pdf" multiple required>
     </label>
-    <button type="submit" class="button primary" id="photo-button">Read the photos</button>
-    <p class="thinking" id="thinking" hidden>🔍 Claude is looking at your photos. This can take up to a minute…</p>
+    <button type="submit" class="button primary" id="photo-button">Read them</button>
+    <p class="thinking" id="thinking" hidden>🔍 Claude is reading your files. This can take up to a minute…</p>
   </form>
 
   <script>

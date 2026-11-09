@@ -15,7 +15,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, sessi
 import ai_client
 import database
 from auth import password_is_correct
-from photos import MAX_PHOTOS, PhotoError, prepare_photo
+from photos import MAX_PHOTOS, PhotoError, prepare_upload
 from recipes import (
     CUISINES,
     DIFFICULTIES,
@@ -248,13 +248,13 @@ def create_app(
         if request.method == "POST":
             uploads = [f for f in request.files.getlist("photos") if f.filename]
             if not uploads:
-                error = "Please choose at least one photo."
+                error = "Please choose at least one photo or PDF."
             elif len(uploads) > MAX_PHOTOS:
-                error = f"Please choose up to {MAX_PHOTOS} photos at a time."
+                error = f"Please choose up to {MAX_PHOTOS} photos or PDFs at a time."
             else:
                 try:
-                    photos = [prepare_photo(f.read(), f.filename) for f in uploads]
-                    found_items = read_photo_items(photos)
+                    prepared = [prepare_upload(f.read(), f.filename) for f in uploads]
+                    found_items = read_photo_items(prepared)
                 except (PhotoError, ai_client.SuggestionError) as problem:
                     error = str(problem)
                 else:

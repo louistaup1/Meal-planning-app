@@ -8,7 +8,10 @@ from PIL import Image
 import ai_client
 from app import create_app
 from pantry import plan_photo_additions, top_up_target
-from photos import MAX_SIDE, PhotoError, prepare_photo
+from photos import MAX_PDF_BYTES, MAX_SIDE, PhotoError, prepare_photo, prepare_upload
+
+# Enough of a PDF for our code to recognise it. Only Claude reads what's inside.
+FAKE_PDF = b"%PDF-1.4\n% pretend receipt\n%%EOF\n"
 
 
 def make_photo(width=4000, height=3000, fmt="PNG"):
@@ -39,6 +42,22 @@ def test_big_photos_are_shrunk_to_a_jpeg():
 def test_files_that_are_not_photos_are_rejected():
     with pytest.raises(PhotoError, match="Couldn't read notes.txt"):
         prepare_photo(b"just some text", "notes.txt")
+
+
+def test_pdfs_are_kept_as_they_are():
+    upload = prepare_upload(FAKE_PDF, "receipt.pdf")
+    assert upload == {"media_type": "application/pdf", "data": FAKE_PDF}
+
+
+def test_photos_become_jpegs_when_uploaded():
+    upload = prepare_upload(make_photo(800, 600), "shelf.png")
+    assert upload["media_type"] == "image/jpeg"
+
+
+def test_very_big_pdfs_are_rejected():
+    too_big = FAKE_PDF + b"0" * MAX_PDF_BYTES
+    with pytest.raises(PhotoError, match="receipt.pdf is too big"):
+        prepare_upload(too_big, "receipt.pdf")
 
 
 # --- pantry.plan_photo_additions ----------------------------------------------
@@ -195,7 +214,7 @@ def test_read_items_sends_photos_and_categories_to_claude(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
     monkeypatch.setattr(ai_client.anthropic, "Anthropic", FakeAnthropic)
 
-    items = ai_client.read_items_from_photos([prepare_photo(make_photo(100, 100))])
+    items = ai_client.read_items_from_photos([prepare_upload(make_photo(100, 100))])
 
     assert items == [{"name": "Milk", "category": "Dairy", "quantity": 2.0, "unit": "L"}]
     content = calls["messages"][0]["content"]
@@ -207,3 +226,46 @@ def test_read_items_sends_photos_and_categories_to_claude(monkeypatch):
 def test_claude_can_only_pick_known_categories():
     with pytest.raises(ValueError):
         ai_client.PhotoItem(name="Crisps", category="Snacks", quantity=1, unit="packs")
+
+
+def test_a_pdf_receipt_goes_through_the_upload_page(tmp_path):
+    received = []
+
+    def pretend_reader(uploads):
+        received.extend(uploads)
+        return [found("Oat milk", "Dairy", 2, "L")]
+
+    client = make_client(tmp_path, pretend_reader)
+    page = client.post("/photos", data={"photos": [(io.BytesIO(FAKE_PDF), "order.pdf")]},
+                       content_type="multipart/form-data")
+
+    assert received[0]["media_type"] == "application/pdf"
+    assert b'value="Oat milk"' in page.data
+
+
+def test_pdfs_are_sent_to_claude_as_documents(monkeypatch):
+    calls = {}
+
+    class FakeAnthropic:
+        def __init__(self):
+            self.beta = self
+            self.messages = self
+
+        def parse(self, **settings):
+            calls.update(settings)
+
+            class Response:
+                stop_reason = "end_turn"
+                parsed_output = ai_client.PhotoItems(items=[])
+            return Response()
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setattr(ai_client.anthropic, "Anthropic", FakeAnthropic)
+
+    ai_client.read_items_from_photos([prepare_upload(FAKE_PDF), prepare_upload(make_photo(100, 100))])
+
+    content = calls["messages"][0]["content"]
+    assert content[0]["type"] == "document"
+    assert content[0]["source"]["media_type"] == "application/pdf"
+    assert content[1]["type"] == "image"
+    assert content[2]["type"] == "text"

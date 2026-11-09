@@ -94,6 +94,7 @@ class SuggestionError(Exception):
 PHOTO_INSTRUCTIONS = """You help someone fill in their kitchen pantry app from photos.
 
 The photos may show a shop receipt, fridge or cupboard shelves, spice jars, or shopping bags.
+You may also get PDFs, usually receipts or order confirmations from online grocery shopping.
 List every food or drink item you can identify, so it can be added to the pantry.
 
 For each item:
@@ -108,7 +109,8 @@ For each item:
   - Prefer these units: pieces, g, kg, ml, L, cans, jars, packs, bunches.
 
 Other rules:
-- Skip anything that isn't food or drink (cleaning products, toiletries, bags, discounts, totals).
+- Skip anything that isn't food or drink (cleaning products, toiletries, bags, discounts, totals,
+  delivery fees). In an online order, skip items marked as unavailable or substituted away.
 - If the same item appears more than once, list it once with the total quantity.
 - Skip anything you can't read or recognise clearly. Don't guess."""
 
@@ -129,26 +131,29 @@ def suggest_recipes(request_text):
     return [recipe.model_dump() for recipe in result.recipes]
 
 
-def read_items_from_photos(jpeg_photos):
+def read_items_from_photos(uploads):
     """
-    Ask Claude which food items it can see in some photos (each one JPEG bytes):
+    Ask Claude which food items it can see in photos and PDFs:
     receipts, shelves, spice jars and so on.
+    `uploads` comes from photos.prepare_upload(): each has a media_type and data.
     Returns a list of dictionaries with name, category, quantity and unit.
     """
     content = []
-    for photo in jpeg_photos:
+    for upload in uploads:
+        # Claude reads PDFs as "document" blocks and photos as "image" blocks.
+        block_type = "document" if upload["media_type"] == "application/pdf" else "image"
         content.append({
-            "type": "image",
+            "type": block_type,
             "source": {
                 "type": "base64",
-                "media_type": "image/jpeg",
-                "data": base64.standard_b64encode(photo).decode("utf-8"),
+                "media_type": upload["media_type"],
+                "data": base64.standard_b64encode(upload["data"]).decode("utf-8"),
             },
         })
     categories = ", ".join(CATEGORIES)
     content.append({
         "type": "text",
-        "text": f"Which food items can you see in these photos? Categories to choose from: {categories}.",
+        "text": f"Which food items can you see in these photos or documents? Categories to choose from: {categories}.",
     })
 
     result = _ask_claude(
