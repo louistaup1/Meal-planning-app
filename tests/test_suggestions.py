@@ -201,3 +201,23 @@ def test_without_saved_recipes_the_request_has_no_recipe_section(tmp_path):
     add_spaghetti(client)
     client.post("/suggest", data={})
     assert "My saved recipes" not in pretend.requests[0]
+
+
+def test_back_to_suggestions_shows_the_last_ones_without_asking_claude_again(tmp_path):
+    pretend = PretendClaude()
+    client = make_client(tmp_path, pretend)
+    add_spaghetti(client)
+    client.post("/suggest", data={"cuisine": "Italian", "people": "4"})
+
+    page = client.get("/suggest")
+
+    assert len(pretend.requests) == 1          # Claude was only asked once
+    assert b"Garlic spaghetti" in page.data
+    assert b'<option selected>Italian</option>' in page.data
+    assert b'value="4" selected' in page.data
+
+
+def test_suggestions_page_is_empty_before_the_first_suggest(tmp_path):
+    client = make_client(tmp_path, PretendClaude())
+    page = client.get("/suggest")
+    assert b'class="recipe-card"' not in page.data

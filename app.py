@@ -198,6 +198,19 @@ def create_app(
         suggestions = []
         error = None
 
+        if request.method == "GET":
+            # Show the last suggestions again (free: no new Claude request).
+            last = session.get("last_suggestions")
+            if last:
+                filters = read_filters(last["filters"])
+                pantry_items = database.get_all_items(app.config["DB_PATH"])
+                for suggestion_id in last["ids"]:
+                    recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+                    if recipe is not None:
+                        checked = check_against_pantry(recipe, pantry_items)
+                        checked["id"] = suggestion_id
+                        suggestions.append(checked)
+
         if request.method == "POST":
             pantry_items = database.get_all_items(app.config["DB_PATH"])
             if not pantry_items:
@@ -218,6 +231,11 @@ def create_app(
                         suggestions.append(checked)
                     if not suggestions:
                         error = "Claude didn't find a recipe this time. Try different filters."
+                    # Remember these, so "Back to suggestions" can show them again.
+                    session["last_suggestions"] = {
+                        "ids": [s["id"] for s in suggestions],
+                        "filters": filters,
+                    }
 
         return render_template(
             "suggest.html",
