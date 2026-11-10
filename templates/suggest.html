@@ -4,10 +4,24 @@
 
 {% block content %}
   <p><a href="{{ url_for('pantry_page') }}">← Back to my pantry</a></p>
-  <h1>What should I cook tonight?</h1>
+  <h1>What should I cook?</h1>
 
   <form method="post" class="item-form filters" id="suggest-form">
     <div class="row">
+      <label>Meal
+        <select name="meal">
+          {% for choice in meals %}
+            <option {% if filters.meal == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Dish
+        <select name="dish_type">
+          {% for choice in dish_types %}
+            <option {% if filters.dish_type == choice %}selected{% endif %}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Cuisine
         <select name="cuisine">
           {% for choice in cuisines %}
@@ -49,7 +63,7 @@
     <article class="recipe-card">
       <h2 class="recipe-title">{{ recipe.title }}</h2>
       <p class="recipe-facts">
-        ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
+        ⏱ {{ recipe.total_minutes }} min · {% if recipe.dish_type %}{{ recipe.dish_type }} · {% endif %}{{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
       </p>
       {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
       <p>{{ recipe.summary }}</p>

@@ -20,6 +20,8 @@ from photos import MAX_PHOTOS, PhotoError, prepare_upload
 from recipes import (
     CUISINES,
     DIFFICULTIES,
+    DISH_TYPES,
+    MEALS,
     PEOPLE_CHOICES,
     STYLES,
     build_request,
@@ -191,7 +193,7 @@ def create_app(
         flash(f"Removed {existing['name']}.")
         return redirect(url_for("pantry_page"))
 
-    # --- Dinner suggestions -------------------------------------------------
+    # --- Recipe suggestions -------------------------------------------------
 
     @app.route("/suggest", methods=["GET", "POST"])
     def suggest_page():
@@ -241,6 +243,8 @@ def create_app(
         return render_template(
             "suggest.html",
             filters=filters,
+            meals=MEALS,
+            dish_types=DISH_TYPES,
             cuisines=CUISINES,
             difficulties=DIFFICULTIES,
             styles=STYLES,

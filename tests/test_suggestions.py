@@ -10,6 +10,7 @@ PRETEND_RECIPE = {
     "summary": "Simple and fast.",
     "cuisine": "Italian",
     "difficulty": "Easy",
+    "dish_type": "Main",
     "style": "Quick",
     "total_minutes": 20,
     "servings": 2,
@@ -223,3 +224,22 @@ def test_suggestions_page_is_empty_before_the_first_suggest(tmp_path):
     client = make_client(tmp_path, PretendClaude())
     page = client.get("/suggest")
     assert b'class="recipe-card"' not in page.data
+
+
+def test_meal_and_dish_filters_are_sent_and_remembered(tmp_path):
+    pretend = PretendClaude(recipes=[dict(PRETEND_RECIPE, title="Lemon posset", dish_type="Dessert")])
+    client = make_client(tmp_path, pretend)
+    add_spaghetti(client)
+
+    page = client.post("/suggest", data={"meal": "Lunch", "dish_type": "Dessert"})
+
+    assert "dessert recipes for lunch" in pretend.requests[0]
+    assert b"Dessert \xc2\xb7 Easy" in page.data          # "Dessert · Easy" on the card
+    again = client.get("/suggest").data
+    assert b"<option selected>Lunch</option>" in again
+    assert b"<option selected>Dessert</option>" in again
+
+
+def test_claude_must_give_a_known_dish_type():
+    with pytest.raises(ValueError):
+        ai_client.Recipe(**dict(PRETEND_RECIPE, dish_type="Snack"))

@@ -16,7 +16,8 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - **My recipes:** paste your own recipes (any layout). Claude considers them alongside new
   ideas when suggesting dinner, and marks them "From my recipes".
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
-  by cuisine, difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
+  by meal (breakfast, lunch, dinner), dish (main, starter, side, dessert), cuisine,
+  difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
   time, the difficulty and what you're missing. **Back to suggestions** shows your last
   suggestions again for free (no new request to Claude).
 - **Cook flow:** tap **Cook this**, then tick what you have and check the amounts used.
@@ -62,7 +63,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `86 passed`.
+    You should see a line like `89 passed`.
 
 ### Part C: Create your secret settings file (.env)
 

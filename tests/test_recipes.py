@@ -21,13 +21,25 @@ def ingredient(name, amount, unit, pantry_item_id, is_staple=False):
 
 # --- read_filters ------------------------------------------------------------
 
-def test_filters_default_to_any_and_two_people():
-    assert read_filters({}) == {"cuisine": "Any", "difficulty": "Any", "style": "Any", "people": 2}
+def test_filters_default_to_main_dish_for_dinner_and_two_people():
+    assert read_filters({}) == {"meal": "Dinner", "dish_type": "Main", "cuisine": "Any",
+                                "difficulty": "Any", "style": "Any", "people": 2}
 
 
-def test_unknown_filter_values_become_any():
-    filters = read_filters({"cuisine": "Martian", "difficulty": "Easy", "style": "Comfort", "people": "4"})
-    assert filters == {"cuisine": "Any", "difficulty": "Easy", "style": "Comfort", "people": 4}
+def test_unknown_filter_values_fall_back_to_defaults():
+    filters = read_filters({"meal": "Brunch", "dish_type": "Snack", "cuisine": "Martian",
+                            "difficulty": "Easy", "style": "Comfort", "people": "4"})
+    assert filters == {"meal": "Dinner", "dish_type": "Main", "cuisine": "Any",
+                       "difficulty": "Easy", "style": "Comfort", "people": 4}
+
+
+def test_request_names_the_meal_and_dish_type():
+    text = build_request(PANTRY, read_filters({"meal": "Lunch", "dish_type": "Dessert", "people": "4"}), TODAY)
+    assert "Suggest up to 3 dessert recipes for lunch, for 4 people." in text
+    text = build_request(PANTRY, read_filters({}), TODAY)
+    assert "Suggest up to 3 main dish recipes for dinner, for 2 people." in text
+    text = build_request(PANTRY, read_filters({"meal": "Breakfast", "dish_type": "Any"}), TODAY)
+    assert "recipes (any kind of dish) for breakfast" in text
 
 
 def test_bad_people_values_fall_back_to_two():
@@ -51,7 +63,7 @@ def test_pantry_description_marks_expiring_and_expired_items():
 
 
 def test_request_includes_only_chosen_filters():
-    text = build_request(PANTRY, {"cuisine": "Italian", "difficulty": "Any", "style": "Quick", "people": 2}, TODAY)
+    text = build_request(PANTRY, read_filters({"cuisine": "Italian", "style": "Quick"}), TODAY)
     assert "Cuisine: Italian" in text
     assert "Style: Quick" in text
     assert "Difficulty" not in text

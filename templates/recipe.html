@@ -6,7 +6,7 @@
   <p><a href="{{ url_for('suggest_page') }}">← Back to suggestions</a></p>
   <h1>{{ recipe.title }}</h1>
   <p class="recipe-facts">
-    ⏱ {{ recipe.total_minutes }} min · {{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
+    ⏱ {{ recipe.total_minutes }} min · {% if recipe.dish_type %}{{ recipe.dish_type }} · {% endif %}{{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
   </p>
   {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
   <p>{{ recipe.summary }}</p>

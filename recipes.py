@@ -13,6 +13,19 @@ from pantry import expiry_status, format_quantity
 CUISINES = ["Any", "Italian", "French", "Asian", "Indian", "Mexican", "Mediterranean", "American"]
 DIFFICULTIES = ["Any", "Easy", "Medium", "Hard"]
 STYLES = ["Any", "Quick", "Comfort", "Healthy"]
+MEALS = ["Breakfast", "Lunch", "Dinner"]
+DISH_TYPES = ["Any", "Main", "Starter", "Side", "Dessert"]
+DEFAULT_MEAL = "Dinner"
+DEFAULT_DISH_TYPE = "Main"
+
+# How each dish type is written in the request to Claude.
+DISH_TYPE_WORDS = {
+    "Any": "recipes (any kind of dish)",
+    "Main": "main dish recipes",
+    "Starter": "starter recipes",
+    "Side": "side dish recipes",
+    "Dessert": "dessert recipes",
+}
 PEOPLE_CHOICES = [1, 2, 3, 4, 5, 6, 7, 8]
 DEFAULT_PEOPLE = 2
 
@@ -25,9 +38,15 @@ MAX_MY_RECIPE_LENGTH = 10000
 def read_filters(form):
     """
     Read the filter choices from the form.
-    Anything missing or unexpected becomes "Any", so a bad value can't break things.
+    Anything missing or unexpected falls back to its default ("Any", Dinner, Main dish,
+    2 people), so a bad value can't break things.
     """
     filters = {}
+    meal = form.get("meal", DEFAULT_MEAL)
+    filters["meal"] = meal if meal in MEALS else DEFAULT_MEAL
+    dish_type = form.get("dish_type", DEFAULT_DISH_TYPE)
+    filters["dish_type"] = dish_type if dish_type in DISH_TYPES else DEFAULT_DISH_TYPE
+
     for field, choices in (("cuisine", CUISINES), ("difficulty", DIFFICULTIES), ("style", STYLES)):
         value = form.get(field, "Any")
         filters[field] = value if value in choices else "Any"
@@ -109,7 +128,8 @@ def build_request(pantry_items, filters, today=None, my_recipes=()):
     people_text = "1 person" if people == 1 else f"{people} people"
 
     return (
-        f"Suggest up to {MAX_SUGGESTIONS} dinner recipes for tonight, for {people_text}.\n\n"
+        f"Suggest up to {MAX_SUGGESTIONS} {DISH_TYPE_WORDS[filters['dish_type']]} "
+        f"for {filters['meal'].lower()}, for {people_text}.\n\n"
         f"My pantry:\n{describe_pantry(pantry_items, today)}\n\n"
         f"My preferences:\n{wishes_text}"
         + (f"\n\nMy saved recipes:\n{describe_my_recipes(my_recipes)}" if my_recipes else "")
