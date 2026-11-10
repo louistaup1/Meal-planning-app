@@ -243,3 +243,63 @@ def test_meal_and_dish_filters_are_sent_and_remembered(tmp_path):
 def test_claude_must_give_a_known_dish_type():
     with pytest.raises(ValueError):
         ai_client.Recipe(**dict(PRETEND_RECIPE, dish_type="Snack"))
+
+
+# --- Saving a suggestion to My recipes ----------------------------------------
+
+def suggest_once(tmp_path, recipes=None):
+    client = make_client(tmp_path, PretendClaude(recipes=recipes))
+    add_spaghetti(client)
+    client.post("/suggest", data={})   # saved as suggestion 1 (and 2, 3...)
+    return client
+
+
+def test_save_from_a_suggestion_card(tmp_path):
+    client = suggest_once(tmp_path)
+
+    page = client.post("/recipes/1/save", data={"back": "suggest"}, follow_redirects=True)
+
+    assert b"Saved Garlic spaghetti to My recipes." in page.data
+    assert b"In My recipes" in page.data            # the button became the chip
+    assert b"What should I cook?" in page.data      # back on the suggestions page
+
+    saved = client.get("/my-recipes/1").data
+    assert b"Serves 2 \xc2\xb7 20 min" in saved
+    assert b"- 200 g Spaghetti" in saved
+    assert b"1. Boil the pasta." in saved
+
+
+def test_save_from_the_recipe_page_goes_back_there(tmp_path):
+    client = suggest_once(tmp_path)
+    page = client.post("/recipes/1/save", data={"back": "recipe"}, follow_redirects=True)
+    assert b"What did you use?" in page.data
+    assert b"In My recipes" in page.data
+
+
+def test_saving_twice_does_not_make_a_duplicate(tmp_path):
+    client = suggest_once(tmp_path)
+    client.post("/recipes/1/save", data={"back": "recipe"})
+    page = client.post("/recipes/1/save", data={"back": "recipe"}, follow_redirects=True)
+
+    assert b"already in My recipes" in page.data
+    assert client.get("/my-recipes").data.count(b'class="item-name"') == 1
+
+
+def test_save_button_comes_back_after_deleting_the_saved_copy(tmp_path):
+    client = suggest_once(tmp_path)
+    client.post("/recipes/1/save", data={"back": "recipe"})
+    client.post("/my-recipes/1/delete")
+
+    page = client.get("/recipes/1")
+    assert b"In My recipes" not in page.data
+    assert b"\xe2\xad\x90 Save</button>" in page.data   # "⭐ Save"
+
+
+def test_recipes_from_my_recipes_have_no_save_button(tmp_path):
+    client = make_client(tmp_path, PretendClaude(recipes=[dict(PRETEND_RECIPE, from_my_recipe_id=1)]))
+    add_spaghetti(client)
+    client.post("/my-recipes", data={"title": "Garlic spaghetti", "text": "My way."})
+    page = client.post("/suggest", data={})
+
+    assert b"From my recipes" in page.data
+    assert b"\xe2\xad\x90 Save</button>" not in page.data

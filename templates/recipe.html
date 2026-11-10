@@ -10,6 +10,7 @@
   </p>
   {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
   <p>{{ recipe.summary }}</p>
+  <div class="card-buttons">{% include "_save_button.html" %}</div>
 
   {% if recipe.cooked %}
     <p class="notice">You've already started cooking this.

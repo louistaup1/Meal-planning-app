@@ -179,3 +179,34 @@ def check_against_pantry(recipe, pantry_items):
     checked["ingredients"] = checked_ingredients
     checked["missing"] = missing
     return checked
+
+
+def recipe_to_text(recipe):
+    """
+    Write a suggested recipe out as plain text, ready to save in My recipes.
+    Uses the recipe as Claude wrote it (amounts for the number of people it was made for).
+    """
+    facts = [f"Serves {recipe['servings']}", f"{recipe['total_minutes']} min", recipe["difficulty"], recipe["cuisine"]]
+    if recipe.get("dish_type"):
+        facts.append(recipe["dish_type"])
+
+    lines = [" · ".join(facts), "", recipe["summary"], "", "Ingredients:"]
+    for ingredient in recipe["ingredients"]:
+        amount = f"{format_quantity(ingredient['amount'])} {ingredient['unit']}".strip()
+        lines.append(f"- {amount} {ingredient['name']}")
+    lines += ["", "Method:"]
+    for number, step in enumerate(recipe["steps"], start=1):
+        lines.append(f"{number}. {step}")
+    return "\n".join(lines)
+
+
+def mark_saved(recipe, my_recipe_ids):
+    """
+    Note on a suggested recipe whether it's in My recipes, so the page can show
+    "⭐ In My recipes" instead of a Save button. A saved copy you've since deleted
+    doesn't count, so the Save button comes back.
+    """
+    marked = dict(recipe)
+    saved_id = recipe.get("saved_as_my_recipe_id")
+    marked["saved_my_recipe_id"] = saved_id if saved_id in my_recipe_ids else None
+    return marked

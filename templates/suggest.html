@@ -72,7 +72,10 @@
       {% else %}
         <p class="have-all">✅ You have everything</p>
       {% endif %}
-      <a href="{{ url_for('recipe_page', suggestion_id=recipe.id) }}" class="button primary">Cook this</a>
+      <div class="card-buttons">
+        <a href="{{ url_for('recipe_page', suggestion_id=recipe.id) }}" class="button primary">Cook this</a>
+        {% include "_save_button.html" %}
+      </div>
     </article>
   {% endfor %}
 

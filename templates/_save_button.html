@@ -1,0 +1,12 @@
+{#
+  The "⭐ Save" button for a suggested recipe, shared by the suggestions page and the recipe page.
+  Recipes that came from My recipes don't need one.
+#}
+{% if recipe.saved_my_recipe_id %}
+  <a href="{{ url_for('my_recipe_page', recipe_id=recipe.saved_my_recipe_id) }}" class="saved-chip">⭐ In My recipes</a>
+{% elif not recipe.from_my_recipe_id %}
+  <form method="post" action="{{ url_for('save_to_my_recipes_action', suggestion_id=recipe.id) }}" class="inline-form">
+    <input type="hidden" name="back" value="{{ 'suggest' if request.endpoint == 'suggest_page' else 'recipe' }}">
+    <button type="submit" class="button save-button">⭐ Save</button>
+  </form>
+{% endif %}

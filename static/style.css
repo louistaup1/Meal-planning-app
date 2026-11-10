@@ -425,3 +425,19 @@ button[disabled] { opacity: 0.6; }
 .tick-list input:checked + span { text-decoration: line-through; color: var(--muted); }
 .to-buy { background: #ffe3ef; }
 .steps-to-tick { font-size: 18px; margin-bottom: 28px; }
+
+/* ---------- Saving to My recipes ---------- */
+
+.card-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0; }
+.inline-form { margin: 0; }
+.save-button { background: var(--yellow); }
+.saved-chip {
+  display: inline-block;
+  background: var(--yellow);
+  color: var(--text);
+  text-decoration: none;
+  border: 2px solid var(--outline);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-weight: 800;
+}

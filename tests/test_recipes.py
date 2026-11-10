@@ -2,7 +2,14 @@
 
 from datetime import date
 
-from recipes import build_request, check_against_pantry, describe_pantry, read_filters
+from recipes import (
+    build_request,
+    check_against_pantry,
+    describe_pantry,
+    mark_saved,
+    read_filters,
+    recipe_to_text,
+)
 
 TODAY = date(2026, 11, 7)
 
@@ -112,3 +119,45 @@ def test_check_does_not_change_the_original_recipe():
     check_against_pantry(recipe, PANTRY)
     assert "status" not in recipe["ingredients"][0]
     assert "missing" not in recipe
+
+
+# --- Saving a suggestion to My recipes ----------------------------------------
+
+SUGGESTED = {
+    "title": "Garlic spaghetti",
+    "summary": "Simple and fast.",
+    "cuisine": "Italian",
+    "difficulty": "Easy",
+    "dish_type": "Main",
+    "total_minutes": 20,
+    "servings": 2,
+    "ingredients": [ingredient("Spaghetti", 200, "g", 1), ingredient("Eggs", 2, "", None)],
+    "steps": ["Boil the pasta.", "Toss with garlic."],
+}
+
+
+def test_recipe_to_text_lists_facts_ingredients_and_numbered_steps():
+    assert recipe_to_text(SUGGESTED) == (
+        "Serves 2 · 20 min · Easy · Italian · Main\n"
+        "\n"
+        "Simple and fast.\n"
+        "\n"
+        "Ingredients:\n"
+        "- 200 g Spaghetti\n"
+        "- 2 Eggs\n"
+        "\n"
+        "Method:\n"
+        "1. Boil the pasta.\n"
+        "2. Toss with garlic."
+    )
+
+
+def test_recipe_to_text_works_without_a_dish_type():
+    older = {key: value for key, value in SUGGESTED.items() if key != "dish_type"}
+    assert recipe_to_text(older).startswith("Serves 2 · 20 min · Easy · Italian\n")
+
+
+def test_mark_saved_only_counts_copies_that_still_exist():
+    assert mark_saved(dict(SUGGESTED, saved_as_my_recipe_id=5), {5, 6})["saved_my_recipe_id"] == 5
+    assert mark_saved(dict(SUGGESTED, saved_as_my_recipe_id=5), {6})["saved_my_recipe_id"] is None
+    assert mark_saved(SUGGESTED, {5})["saved_my_recipe_id"] is None

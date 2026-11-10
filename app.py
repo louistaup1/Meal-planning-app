@@ -27,7 +27,9 @@ from recipes import (
     build_request,
     check_against_pantry,
     link_to_my_recipe,
+    mark_saved,
     read_filters,
+    recipe_to_text,
     validate_my_recipe,
 )
 from pantry import (
@@ -240,6 +242,10 @@ def create_app(
                         "filters": filters,
                     }
 
+        # Show "⭐ In My recipes" on suggestions you've already saved.
+        my_recipe_ids = {r["id"] for r in database.get_all_my_recipes(app.config["DB_PATH"])}
+        suggestions = [mark_saved(s, my_recipe_ids) for s in suggestions]
+
         return render_template(
             "suggest.html",
             filters=filters,
@@ -253,11 +259,36 @@ def create_app(
             error=error,
         )
 
+    # --- Saving a suggestion to My recipes ---------------------------------
+
+    @app.route("/recipes/<int:suggestion_id>/save", methods=["POST"])
+    def save_to_my_recipes_action(suggestion_id):
+        recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+        if recipe is None:
+            abort(404)
+
+        my_recipe_ids = {r["id"] for r in database.get_all_my_recipes(app.config["DB_PATH"])}
+        already_saved = mark_saved(recipe, my_recipe_ids)["saved_my_recipe_id"]
+
+        if recipe.get("from_my_recipe_id") in my_recipe_ids or already_saved:
+            flash(f"{recipe['title']} is already in My recipes.")
+        else:
+            my_recipe_id = database.add_my_recipe(app.config["DB_PATH"], recipe["title"], recipe_to_text(recipe))
+            recipe["saved_as_my_recipe_id"] = my_recipe_id
+            database.update_suggestion(app.config["DB_PATH"], suggestion_id, recipe)
+            flash(f"⭐ Saved {recipe['title']} to My recipes.")
+
+        # Go back to the page the button was on.
+        if request.form.get("back") == "suggest":
+            return redirect(url_for("suggest_page"))
+        return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
+
     # --- Cooking a recipe --------------------------------------------------
 
     def show_recipe(suggestion_id, recipe, pantry_items, form=None, errors=()):
         """The recipe page with its "What did you use?" checklist."""
-        checked = check_against_pantry(recipe, pantry_items)
+        my_recipe_ids = {r["id"] for r in database.get_all_my_recipes(app.config["DB_PATH"])}
+        checked = mark_saved(check_against_pantry(recipe, pantry_items), my_recipe_ids)
         checked["id"] = suggestion_id
         staples = [i["name"] for i in checked["ingredients"] if i["status"] == "assumed"]
         return render_template(
