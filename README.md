@@ -64,7 +64,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `97 passed`.
+    You should see a line like `100 passed`.
 
 ### Part C: Create your secret settings file (.env)
 
@@ -116,7 +116,11 @@ The `.env` file is never uploaded to GitHub, because the `.gitignore` file tells
 ### Part E: Make it feel like an app on your iPad
 
 20. In Safari, with the app open, tap the **Share** button (square with an arrow), then
-    **Add to Home Screen**, then **Add**. Pantry Chef now has its own icon.
+    **Add to Home Screen**, then **Add**. Pantry Chef now has its own icon: a frying pan
+    with an egg on a yellow sticker.
+
+    If you added it before the icon existed and still see a plain letter "P", press and
+    hold the old icon, tap **Remove App** (or **Delete Bookmark**), then add it again from Safari.
 
 ### Keeping it running (free account)
 

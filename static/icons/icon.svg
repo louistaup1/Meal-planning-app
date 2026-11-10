@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Pantry Chef icon: a frying pan with an egg on a yellow sticker, Candy Pop colours. -->
+  <rect width="512" height="512" fill="#9b5de5"/>
+  <g fill="#ffffff" opacity="0.18">
+    <circle cx="40" cy="40" r="6"/><circle cx="120" cy="40" r="6"/><circle cx="200" cy="40" r="6"/>
+    <circle cx="280" cy="40" r="6"/><circle cx="360" cy="40" r="6"/><circle cx="440" cy="40" r="6"/>
+    <circle cx="40" cy="472" r="6"/><circle cx="120" cy="472" r="6"/><circle cx="200" cy="472" r="6"/>
+    <circle cx="280" cy="472" r="6"/><circle cx="360" cy="472" r="6"/><circle cx="440" cy="472" r="6"/>
+  </g>
+  <!-- the sticker, slightly tilted, with a hard black shadow -->
+  <g transform="rotate(-7 256 256)">
+    <rect x="96" y="96" width="340" height="340" rx="64" fill="#111111"/>
+    <rect x="76" y="76" width="340" height="340" rx="64" fill="#fee440" stroke="#111111" stroke-width="16"/>
+  </g>
+  <!-- the pan handle -->
+  <rect x="300" y="318" width="150" height="46" rx="23" fill="#111111" transform="rotate(38 300 318)"/>
+  <!-- the pan -->
+  <circle cx="232" cy="236" r="124" fill="#111111"/>
+  <circle cx="232" cy="236" r="100" fill="#3a3a3a"/>
+  <!-- the egg -->
+  <path d="M168 218 C160 170 214 150 246 172 C280 150 324 178 308 222 C330 258 296 300 252 290
+           C220 316 168 300 172 262 C150 250 152 228 168 218 Z" fill="#ffffff" stroke="#111111" stroke-width="10"/>
+  <circle cx="240" cy="232" r="34" fill="#ff9f1c" stroke="#111111" stroke-width="10"/>
+  <circle cx="230" cy="222" r="9" fill="#ffffff" opacity="0.8"/>
+</svg>
