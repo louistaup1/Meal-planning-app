@@ -31,6 +31,7 @@ def cook_checklist(checked_recipe, pantry_items):
         row = {
             "index": index,
             "name": ingredient["name"],
+            "note": ingredient.get("note", ""),
             "recipe_amount": format_quantity(ingredient["amount"]),
             "recipe_unit": ingredient["unit"],
         }

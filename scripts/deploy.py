@@ -130,7 +130,7 @@ def check_site():
 
 def main():
     parser = argparse.ArgumentParser(description="Deploy Pantry Chef to PythonAnywhere.")
-    parser.add_argument("--smoke", choices=["recipes", "photos", "all"],
+    parser.add_argument("--smoke", choices=["recipes", "photos", "tidy", "all"],
                         help="after deploying, run a real Claude test on PythonAnywhere")
     args = parser.parse_args()
 

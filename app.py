@@ -26,12 +26,14 @@ from recipes import (
     STYLES,
     build_request,
     check_against_pantry,
+    details_from_suggestion,
     format_cooked_date,
     last_cooked_lookup,
     when_last_cooked,
     link_to_my_recipe,
     mark_saved,
     read_filters,
+    recipe_for_cooking,
     recipe_to_text,
     validate_my_recipe,
 )
@@ -62,6 +64,7 @@ def create_app(
     password=None,
     suggest_recipes=ai_client.suggest_recipes,
     read_photo_items=ai_client.read_items_from_photos,
+    tidy_recipe=ai_client.tidy_recipe,
 ):
     """
     Build the app. Tests pass their own `password` and pretend versions of
@@ -227,7 +230,7 @@ def create_app(
                 error = "Your pantry is empty. Add a few ingredients first."
             else:
                 try:
-                    my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+                    my_recipes = my_recipes_for_claude()
                     request_text = build_request(pantry_items, filters, my_recipes=my_recipes)
                     recipes = suggest_recipes(request_text)
                 except ai_client.SuggestionError as problem:
@@ -284,6 +287,8 @@ def create_app(
             flash(f"{recipe['title']} is already in My recipes.")
         else:
             my_recipe_id = database.add_my_recipe(app.config["DB_PATH"], recipe["title"], recipe_to_text(recipe))
+            # A suggestion is already tidy, so no Claude request is needed.
+            database.save_my_recipe_details(app.config["DB_PATH"], my_recipe_id, details_from_suggestion(recipe))
             recipe["saved_as_my_recipe_id"] = my_recipe_id
             database.update_suggestion(app.config["DB_PATH"], suggestion_id, recipe)
             flash(f"⭐ Saved {recipe['title']} to My recipes.")
@@ -441,12 +446,13 @@ def create_app(
         if request.method == "POST":
             title, text, errors = validate_my_recipe(form)
             if not errors:
-                database.add_my_recipe(app.config["DB_PATH"], title, text)
-                flash(f"Saved {title}.")
-                return redirect(url_for("my_recipes_page"))
+                recipe_id = database.add_my_recipe(app.config["DB_PATH"], title, text)
+                tidy_and_save(recipe_id, title, text, f"Saved {title}")
+                return redirect(url_for("my_recipe_page", recipe_id=recipe_id))
         my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
         lookup = last_cooked_lookup(database.get_cooked_log(app.config["DB_PATH"]))
         for recipe in my_recipes:
+            recipe["tidy"] = database.get_my_recipe_details(app.config["DB_PATH"], recipe["id"]) is not None
             recipe["last_cooked"] = format_cooked_date(
                 when_last_cooked({"title": recipe["title"], "my_recipe_id": recipe["id"]}, lookup))
         return render_template("my_recipes.html", my_recipes=my_recipes, form=form, errors=errors)
@@ -456,7 +462,48 @@ def create_app(
         recipe = database.get_my_recipe(app.config["DB_PATH"], recipe_id)
         if recipe is None:
             abort(404)
-        return render_template("my_recipe.html", recipe=recipe)
+        details = database.get_my_recipe_details(app.config["DB_PATH"], recipe_id)
+        return render_template("my_recipe.html", recipe=recipe, details=details)
+
+    def tidy_and_save(recipe_id, title, text, done_message):
+        """Ask Claude to tidy a pasted recipe. If that fails, the original text is still saved."""
+        try:
+            details = tidy_recipe(title, text)
+        except ai_client.SuggestionError as problem:
+            flash(f"{done_message}, but it couldn't be tidied up: {problem} "
+                  "You can try again with the ✨ Tidy up button.")
+            return
+        details["title"] = title  # keep your own title
+        database.save_my_recipe_details(app.config["DB_PATH"], recipe_id, details)
+        flash(f"{done_message} and tidied it up ✨")
+
+    @app.route("/my-recipes/<int:recipe_id>/tidy", methods=["POST"])
+    def tidy_my_recipe_action(recipe_id):
+        recipe = database.get_my_recipe(app.config["DB_PATH"], recipe_id)
+        if recipe is None:
+            abort(404)
+        tidy_and_save(recipe_id, recipe["title"], recipe["text"], f"Read {recipe['title']}")
+        return redirect(url_for("my_recipe_page", recipe_id=recipe_id))
+
+    @app.route("/my-recipes/<int:recipe_id>/cook", methods=["POST"])
+    def cook_my_recipe_action(recipe_id):
+        """Start the usual cook flow for one of your tidied recipes."""
+        details = database.get_my_recipe_details(app.config["DB_PATH"], recipe_id)
+        if details is None:
+            abort(404)
+        pantry_items = database.get_all_items(app.config["DB_PATH"])
+        recipe = recipe_for_cooking(details, recipe_id, pantry_items)
+        suggestion_id = database.save_suggestion(app.config["DB_PATH"], recipe)
+        return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
+
+    def my_recipes_for_claude():
+        """Your recipes as sent to Claude: the tidied version where there is one."""
+        my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+        for recipe in my_recipes:
+            details = database.get_my_recipe_details(app.config["DB_PATH"], recipe["id"])
+            if details:
+                recipe["text"] = recipe_to_text(details)
+        return my_recipes
 
     @app.route("/my-recipes/<int:recipe_id>/delete", methods=["POST"])
     def delete_my_recipe_action(recipe_id):

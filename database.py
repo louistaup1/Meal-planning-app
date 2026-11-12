@@ -43,6 +43,15 @@ def init_db(db_path):
             )
             """
         )
+        # The tidied version of each of your recipes (same shape as a suggestion, as JSON).
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS my_recipe_details (
+                my_recipe_id INTEGER PRIMARY KEY,
+                recipe_json  TEXT NOT NULL
+            )
+            """
+        )
         # A diary of what you've cooked: one line each time you tap "Start cooking".
         connection.execute(
             """
@@ -192,6 +201,25 @@ def get_my_recipe(db_path, recipe_id):
 def delete_my_recipe(db_path, recipe_id):
     with connect(db_path) as connection:
         connection.execute("DELETE FROM my_recipes WHERE id = ?", (recipe_id,))
+        connection.execute("DELETE FROM my_recipe_details WHERE my_recipe_id = ?", (recipe_id,))
+
+
+def save_my_recipe_details(db_path, recipe_id, details):
+    """Store (or replace) the tidied version of one of your recipes."""
+    with connect(db_path) as connection:
+        connection.execute(
+            "INSERT OR REPLACE INTO my_recipe_details (my_recipe_id, recipe_json) VALUES (?, ?)",
+            (recipe_id, json.dumps(details)),
+        )
+
+
+def get_my_recipe_details(db_path, recipe_id):
+    """The tidied version of one of your recipes, or None if it hasn't been tidied yet."""
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT recipe_json FROM my_recipe_details WHERE my_recipe_id = ?", (recipe_id,)
+        ).fetchone()
+    return json.loads(row["recipe_json"]) if row else None
 
 
 # --- Cooking diary --------------------------------------------------------------

@@ -9,13 +9,19 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - Each item has a name, category, quantity, unit and optional expiry date.
 - Items are grouped by category: Dry pantry, Vegetables, Fruits, Spices, Dairy, Proteins, Other.
 - Items that expire within 3 days get a yellow **USE ME!** sticker. Expired items get a red **UH-OH**.
+- Tap a category's heading to fold it away. The iPad remembers which ones you folded, and a
+  folded heading still shows how many items it holds and how many need using soon.
 - **Add from photos:** take or choose up to 5 photos or PDFs: a paper receipt, an email
   receipt saved as a PDF, a fridge or cupboard shelf, or spice jars. Claude lists the food it can see (name, category, quantity, unit).
   You check and fix the list before anything is added. Items you already have, with the
   same unit, are topped up instead of duplicated.
 - **My recipes:** paste your own recipes (any layout), or tap **⭐ Save** on any suggestion
-  to keep it. Claude considers your recipes alongside new ideas when suggesting, and marks
-  them "From my recipes".
+  to keep it. Claude tidies pasted recipes into ingredients and steps (about 1–3 cents each),
+  with ingredient names simplified so they match your pantry ("Red pepper · cut into chunks").
+  Tap **Cook this** on any of your recipes to use the cook flow. Claude also considers your
+  recipes alongside new ideas when suggesting, and marks them "From my recipes".
+- **Cooking diary:** suggestions you've cooked before show "✅ Cooked before · last on 9 Nov",
+  and My recipes shows when you last cooked each one.
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
   by meal (breakfast, lunch, dinner), dish (main, starter, side, dessert), cuisine,
   difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
@@ -64,7 +70,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `100 passed`.
+    You should see a line like `129 passed`.
 
 ### Part C: Create your secret settings file (.env)
 

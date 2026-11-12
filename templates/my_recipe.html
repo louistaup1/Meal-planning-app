@@ -5,7 +5,53 @@
 {% block content %}
   <p><a href="{{ url_for('my_recipes_page') }}">← Back to my recipes</a></p>
   <h1>{{ recipe.title }}</h1>
-  <div class="saved-recipe-text">{{ recipe.text }}</div>
+
+  {% if details %}
+    <p class="recipe-facts">
+      ⏱ {{ details.total_minutes }} min · {{ details.dish_type }} · {{ details.difficulty }} ·
+      {{ details.cuisine }} · serves {{ details.servings }}
+    </p>
+    <p>{{ details.summary }}</p>
+
+    <form method="post" action="{{ url_for('cook_my_recipe_action', recipe_id=recipe.id) }}">
+      <button type="submit" class="button primary">👩‍🍳 Cook this</button>
+    </form>
+
+    <h2>Ingredients</h2>
+    <ul class="ingredient-list">
+      {% for ingredient in details.ingredients %}
+        <li class="ingredient">
+          <span>{{ format_quantity(ingredient.amount) }} {{ ingredient.unit }} <strong>{{ ingredient.name }}</strong>
+            {% if ingredient.note %}<span class="hint">· {{ ingredient.note }}</span>{% endif %}</span>
+          {% if ingredient.is_staple %}<span class="ingredient-status">basic staple</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    <h2>Steps</h2>
+    <ol class="steps">
+      {% for step in details.steps %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+
+    <details class="peek">
+      <summary>Show original</summary>
+      <div class="original-text">{{ recipe.text }}</div>
+    </details>
+  {% else %}
+    <p class="notice">This recipe hasn't been tidied up yet. Tidying lets you cook it from the app,
+      with your pantry checked and updated (about 1–3 cents).</p>
+    <form method="post" action="{{ url_for('tidy_my_recipe_action', recipe_id=recipe.id) }}" id="tidy-form">
+      <button type="submit" class="button primary" id="tidy-button">✨ Tidy up</button>
+      <p class="thinking" id="thinking" hidden>✨ Tidying your recipe. This can take up to half a minute…</p>
+    </form>
+    <div class="saved-recipe-text" style="margin-top: 16px">{{ recipe.text }}</div>
+    <script>
+      document.getElementById("tidy-form").addEventListener("submit", function () {
+        document.getElementById("thinking").hidden = false;
+        document.getElementById("tidy-button").disabled = true;
+      });
+    </script>
+  {% endif %}
 
   <form method="post" action="{{ url_for('delete_my_recipe_action', recipe_id=recipe.id) }}"
         onsubmit="return confirm('Delete this recipe?');" style="margin-top: 24px">

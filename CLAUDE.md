@@ -23,9 +23,9 @@ suggestions and a cook flow that updates the pantry. It's an MVP that works and 
 - **Claude deploys** with `.venv/bin/python scripts/deploy.py` once changes are merged and pushed
   to `main`. It types `git pull`, `pip install` and `pytest` into the user's PythonAnywhere Bash
   console through the PythonAnywhere API, reloads the site only if the tests pass, then checks the
-  login page loads. Add `--smoke recipes|photos|all` to run `scripts/smoke_test.py` on
+  login page loads. Add `--smoke recipes|photos|tidy|all` to run `scripts/smoke_test.py` on
   PythonAnywhere: real Claude requests with the app's own key (about 5–10 cents for recipes,
-  2–4 cents for photos). Run the smoke test after changes that touch Claude requests.
+  2–4 cents for photos, 1–3 cents for tidying). Run the smoke test after changes that touch Claude requests.
 - Deploying changes the live site, so get the user's OK in the conversation first (Claude Code's
   safety check also asks for it).
 - If the deploy says no console is ready (PythonAnywhere error 412), ask the user to open their
@@ -59,7 +59,7 @@ Python 3.12, Flask, SQLite, Jinja templates, plain CSS, pytest. No front-end fra
 | `cooking.py` | Cook flow: "What did you use?" checklist, pantry changes, to-buy list |
 | `ai_client.py` | **The only file that calls Claude.** Model set in `MODEL` (Opus, the user's choice) |
 | `photos.py` | Shrinks photos (1568 px JPEG) and passes PDFs through for Claude |
-| `database.py` | SQLite tables `pantry_items`, `my_recipes`, `suggestions` (recipe stored as JSON) |
+| `database.py` | SQLite tables `pantry_items`, `my_recipes`, `my_recipe_details` (tidied recipe JSON), `suggestions` (recipe JSON), `cooked_log` |
 | `auth.py` | Single app password from `.env` |
 | `templates/`, `static/style.css` | Pages and the "Candy Pop" sticker-book design |
 | `tests/` | pytest, one file per area |
@@ -80,7 +80,8 @@ To check pages visually, run the app with a pretend Claude (see the `PretendClau
 
 - Simple, readable code with plain-English comments. Avoid clever shortcuts.
 - Every change gets tests. **Tests never call the real Claude API**: use the injected pretend
-  functions, or monkeypatch `ai_client.anthropic.Anthropic`.
+  functions (`suggest_recipes`, `read_photo_items`, `tidy_recipe`), or monkeypatch
+  `ai_client.anthropic.Anthropic`. `tests/conftest.py` blocks real calls as a safety net.
 - Claude calls use `client.beta.messages.parse` with a Pydantic `output_format`, the
   `server-side-fallback-2026-07-01` beta and `fallbacks="default"`. All errors become a
   friendly `SuggestionError` message. Read the claude-api skill before changing this file.
@@ -107,9 +108,10 @@ to paste a key into the chat.
 
 ## Scope
 
-- Built: pantry, password, Add from photos (receipts, PDFs, shelves, spices), My recipes
-  (paste or ⭐ Save), suggestions with filters (meal, dish, cuisine, difficulty, style, people),
-  cook flow, app icon.
+- Built: pantry (folding categories), password, Add from photos (receipts, PDFs, shelves,
+  spices), My recipes (paste, tidied by Claude into ingredients and steps, or ⭐ Save; each can be
+  cooked), suggestions with filters (meal, dish, cuisine, difficulty, style, people), cook flow,
+  cooking diary ("Cooked before" on suggestions), app icon.
 - Not built: weekly shopping lists, meal scheduling, user accounts, sharing. Only build these
   when asked, one at a time.
 - Parked idea: a "What are you in the mood for?" text box above the filters, plus at most one

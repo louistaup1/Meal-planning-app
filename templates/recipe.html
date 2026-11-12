@@ -3,7 +3,11 @@
 {% block title %}{{ recipe.title }} · Pantry Chef{% endblock %}
 
 {% block content %}
-  <p><a href="{{ url_for('suggest_page') }}">← Back to suggestions</a></p>
+  {% if recipe.started_from_my_recipes %}
+    <p><a href="{{ url_for('my_recipe_page', recipe_id=recipe.from_my_recipe_id) }}">← Back to the recipe</a></p>
+  {% else %}
+    <p><a href="{{ url_for('suggest_page') }}">← Back to suggestions</a></p>
+  {% endif %}
   <h1>{{ recipe.title }}</h1>
   <p class="recipe-facts">
     ⏱ {{ recipe.total_minutes }} min · {% if recipe.dish_type %}{{ recipe.dish_type }} · {% endif %}{{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
@@ -39,7 +43,7 @@
       <div class="cook-row {% if not has_it %}is-off{% endif %} {% if not row.in_pantry %}not-in-pantry{% endif %}">
         <label class="cook-tick">
           <input type="checkbox" name="have_{{ n }}" {% if has_it %}checked{% endif %}>
-          <span>{{ row.recipe_amount }} {{ row.recipe_unit }} {{ row.name }}</span>
+          <span>{{ row.recipe_amount }} {{ row.recipe_unit }} {{ row.name }}{% if row.note %} <span class="hint">({{ row.note }})</span>{% endif %}</span>
         </label>
         {% if row.in_pantry %}
           <label class="cook-used">Used

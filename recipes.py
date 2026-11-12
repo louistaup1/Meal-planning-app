@@ -196,7 +196,8 @@ def recipe_to_text(recipe):
     lines = [" · ".join(facts), "", recipe["summary"], "", "Ingredients:"]
     for ingredient in recipe["ingredients"]:
         amount = f"{format_quantity(ingredient['amount'])} {ingredient['unit']}".strip()
-        lines.append(f"- {amount} {ingredient['name']}")
+        note = f", {ingredient['note']}" if ingredient.get("note") else ""
+        lines.append(f"- {amount} {ingredient['name']}{note}")
     lines += ["", "Method:"]
     for number, step in enumerate(recipe["steps"], start=1):
         lines.append(f"{number}. {step}")
@@ -260,3 +261,75 @@ def format_cooked_date(when, today=None):
     if when.year == today.year:
         return f"{when.day} {when.strftime('%b')}"
     return f"{when.day} {when.strftime('%b %Y')}"
+
+
+
+# --- Tidied "My recipes" ----------------------------------------------------------
+
+def _singular(word):
+    """A rough singular, good enough for matching: tomatoes -> tomato, berries -> berry, eggs -> egg."""
+    if len(word) > 4 and word.endswith("ies"):
+        return word[:-3] + "y"
+    if len(word) > 4 and word.endswith("oes"):
+        return word[:-2]
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def ingredient_words(name):
+    """The words of an ingredient name, simplified for matching: "Red Peppers" -> {"red", "pepper"}."""
+    return {_singular(word) for word in re.sub(r"[^a-z0-9]+", " ", name.lower()).split()}
+
+
+def match_to_pantry(name, pantry_items):
+    """
+    Find the pantry item an ingredient refers to, or None.
+    Best match first: the same words ("Red pepper" = "Red peppers"), then a pantry item whose
+    words are all in the ingredient ("Tomatoes" for "Cherry tomatoes"), then the other way
+    round ("Chicken" for "Chicken thighs").
+    """
+    wanted = ingredient_words(name)
+    if not wanted:
+        return None
+    for rule in ("same", "pantry_inside", "ingredient_inside"):
+        for item in pantry_items:
+            have = ingredient_words(item["name"])
+            if (rule == "same" and have == wanted) \
+                    or (rule == "pantry_inside" and have and have < wanted) \
+                    or (rule == "ingredient_inside" and wanted < have):
+                return item
+    return None
+
+
+def details_from_suggestion(recipe):
+    """A suggestion saved with ⭐ is already tidy: copy it into the My recipes format."""
+    fields = ("title", "summary", "cuisine", "difficulty", "dish_type", "style", "total_minutes", "servings", "steps")
+    details = {field: recipe.get(field) for field in fields}
+    details["dish_type"] = details["dish_type"] or "Main"
+    details["style"] = details["style"] or "Any"
+    details["ingredients"] = [
+        {"name": i["name"], "amount": i["amount"], "unit": i["unit"], "note": i.get("note", ""),
+         "is_staple": i.get("is_staple", False)}
+        for i in recipe["ingredients"]
+    ]
+    return details
+
+
+def recipe_for_cooking(details, my_recipe_id, pantry_items):
+    """
+    Turn a tidied My recipe into the same shape as a Claude suggestion, so it can use the
+    normal cook flow. Each ingredient is linked to the matching pantry item, if there is one.
+    """
+    recipe = dict(details)
+    recipe["from_my_recipe_id"] = my_recipe_id
+    recipe["started_from_my_recipes"] = True  # so "Back" goes to the recipe, not to suggestions
+    recipe["ingredients"] = []
+    for ingredient in details["ingredients"]:
+        linked = dict(ingredient)
+        # Staples (salt, pepper, oil) are linked too if they're in your pantry;
+        # otherwise the pantry check treats them as "assumed you have".
+        match = match_to_pantry(ingredient["name"], pantry_items)
+        linked["pantry_item_id"] = match["id"] if match else None
+        recipe["ingredients"].append(linked)
+    return recipe

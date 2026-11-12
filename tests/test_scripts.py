@@ -48,3 +48,16 @@ def test_smoke_photo_check_spots_non_food(monkeypatch):
     problems = smoke_test.check_photos()
     assert "bananas weren't found on the receipt" in problems
     assert "washing-up liquid should have been skipped" in problems
+
+
+def test_smoke_tidy_check_spots_untidy_answers(monkeypatch):
+    untidy = {"servings": 4, "steps": ["Do everything."], "ingredients": [
+        {"name": "1 red pepper, cut into chunks", "amount": 1, "unit": "", "note": "", "is_staple": False},
+        {"name": "Salt and pepper", "amount": 1, "unit": "", "note": "", "is_staple": True},
+    ]}
+    monkeypatch.setattr(smoke_test.ai_client, "tidy_recipe", lambda title, text: untidy)
+    problems = smoke_test.check_tidy()
+    assert "'1 red pepper, cut into chunks' should become 'Red pepper'" in problems
+    assert "'salt and pepper' should be split into two ingredients" in problems
+    assert "servings should be 2, got 4" in problems
+    assert "the method should be split into steps" in problems

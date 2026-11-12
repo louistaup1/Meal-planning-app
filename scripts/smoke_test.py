@@ -5,7 +5,8 @@ Run on PythonAnywhere (scripts/deploy.py does this with --smoke). It uses the ap
 key from .env and makes real, paid requests:
   recipes  - one suggestion request with a small pretend pantry   (about 5-10 cents)
   photos   - reads a pretend receipt drawn by this script          (about 2-4 cents)
-  all      - both
+  tidy     - tidies up a messy pasted recipe                       (about 1-3 cents)
+  all      - all three
 
 It never touches your real pantry or recipes.
 """
@@ -81,6 +82,41 @@ def check_photos():
     return problems
 
 
+MESSY_RECIPE = """Quick pepper pasta (serves 2)
+1 red pepper, cut into chunks
+2 cloves of garlic crushed
+200g penne
+salt and pepper
+olive oil
+
+fry pepper + garlic in oil 10 mins, boil pasta, mix, season"""
+
+
+def check_tidy():
+    """Tidy a messy recipe and check ingredients come out as basic names with notes."""
+    details = ai_client.tidy_recipe("Quick pepper pasta", MESSY_RECIPE)
+    for ingredient in details["ingredients"]:
+        note = f" ({ingredient['note']})" if ingredient["note"] else ""
+        print(f"  - {ingredient['amount']:g} {ingredient['unit']} {ingredient['name']}{note}")
+    for number, step in enumerate(details["steps"], start=1):
+        print(f"    {number}. {step}")
+    names = {ingredient["name"].lower(): ingredient for ingredient in details["ingredients"]}
+    problems = []
+    if "red pepper" not in names:
+        problems.append("'1 red pepper, cut into chunks' should become 'Red pepper'")
+    elif "chunk" not in names["red pepper"]["note"].lower():
+        problems.append("'cut into chunks' should be kept as a note")
+    if "garlic" not in names:
+        problems.append("'2 cloves of garlic crushed' should become 'Garlic'")
+    if not any("salt" in name for name in names) or not any("black pepper" in name or name == "pepper" for name in names):
+        problems.append("'salt and pepper' should be split into two ingredients")
+    if details["servings"] != 2:
+        problems.append(f"servings should be 2, got {details['servings']}")
+    if len(details["steps"]) < 2:
+        problems.append("the method should be split into steps")
+    return problems
+
+
 def main():
     what = sys.argv[1] if len(sys.argv) > 1 else "recipes"
     problems = []
@@ -91,6 +127,9 @@ def main():
         if what in ("photos", "all"):
             print("Real receipt-reading test:")
             problems += check_photos()
+        if what in ("tidy", "all"):
+            print("Real recipe-tidying test:")
+            problems += check_tidy()
     except ai_client.SuggestionError as error:
         problems.append(str(error))
 

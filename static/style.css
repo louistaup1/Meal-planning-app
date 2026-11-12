@@ -482,3 +482,7 @@ details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
   font-weight: 800;
   margin: 0 8px 8px 0;
 }
+
+/* ---------- Tidied My recipes ---------- */
+
+.original-text { white-space: pre-wrap; line-height: 1.45; padding-top: 12px; }

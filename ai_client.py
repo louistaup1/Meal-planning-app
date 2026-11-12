@@ -92,6 +92,53 @@ and follow it closely (you may scale amounts for the number of people, and use t
 units). Otherwise set from_my_recipe_id to null."""
 
 
+class TidyIngredient(BaseModel):
+    name: str        # the basic ingredient, as it would be called in a pantry: "Red pepper"
+    amount: float
+    unit: str
+    note: str        # preparation or extra detail: "cut into chunks", "" if none
+    is_staple: bool  # salt, black pepper, cooking oil
+
+
+class TidyRecipe(BaseModel):
+    title: str
+    summary: str
+    cuisine: str
+    difficulty: Literal["Easy", "Medium", "Hard"]
+    dish_type: Literal["Main", "Starter", "Side", "Dessert"]
+    style: str
+    total_minutes: int
+    servings: int
+    ingredients: list[TidyIngredient]
+    steps: list[str]
+
+
+TIDY_INSTRUCTIONS = """You tidy up recipes that someone pasted into their cooking app, so the app \
+can check the ingredients against their pantry and guide them step by step.
+
+Stay faithful to the recipe. Don't add ingredients or steps that aren't there, and don't change
+amounts. Just put everything into the standard format.
+
+Ingredients:
+- name: the basic ingredient, the way it would be written on a shopping list or pantry shelf,
+  in sentence case. "1 red pepper, cut into chunks" has name "Red pepper".
+  "2 cloves of garlic, crushed" has name "Garlic". "200g tinned chopped tomatoes" has name
+  "Chopped tomatoes".
+- note: how it's prepared or any extra detail ("cut into chunks", "crushed", "optional").
+  Use "" when there's nothing to add.
+- amount and unit: as given. Prefer these units: pieces, g, kg, ml, L, tbsp, tsp, cans, jars,
+  packs, bunches. "2 cloves of garlic" is amount 2, unit "pieces". If no amount is given
+  (for example "a pinch of salt"), use your best small estimate and say so in the note.
+- One ingredient per line. Split "salt and pepper" into two.
+- is_staple: true only for salt, black pepper and plain cooking oil.
+
+Steps: the recipe's own method, one clear action per step, without numbers. Keep the
+temperatures and times it gives; convert Fahrenheit to Celsius.
+
+If the recipe doesn't say, give your best estimate for total_minutes, servings, difficulty,
+cuisine, dish_type and style (Quick, Comfort or Healthy). Write a one-sentence summary."""
+
+
 class SuggestionError(Exception):
     """A problem getting suggestions, with a message that's safe to show on screen."""
 
@@ -168,6 +215,20 @@ def read_items_from_photos(uploads):
         effort="medium",
     )
     return [item.model_dump() for item in result.items]
+
+
+def tidy_recipe(title, text):
+    """
+    Turn a pasted recipe into the app's standard format (a dictionary like a suggestion,
+    with a "note" on each ingredient). Raises SuggestionError if something goes wrong.
+    """
+    result = _ask_claude(
+        instructions=TIDY_INSTRUCTIONS,
+        content=f"Title: {title}\n\n{text}",
+        output_format=TidyRecipe,
+        effort="low",
+    )
+    return result.model_dump()
 
 
 def _ask_claude(instructions, content, output_format, effort):
