@@ -124,6 +124,8 @@ def check_site():
             return response.status
     except urllib.error.HTTPError as error:
         return error.code
+    except urllib.error.URLError as error:
+        raise DeployError(f"Couldn't reach https://{DOMAIN} to check it: {error.reason}")
 
 
 def main():
