@@ -6,6 +6,9 @@ and checks each suggested recipe against your real pantry to find out
 what you're missing. Because it doesn't talk to Claude, it's easy to test.
 """
 
+import re
+from datetime import date, datetime
+
 from pantry import expiry_status, format_quantity
 
 
@@ -210,3 +213,50 @@ def mark_saved(recipe, my_recipe_ids):
     saved_id = recipe.get("saved_as_my_recipe_id")
     marked["saved_my_recipe_id"] = saved_id if saved_id in my_recipe_ids else None
     return marked
+
+
+
+# --- "Cooked before" -----------------------------------------------------------
+
+def title_key(title):
+    """
+    A simplified title for matching: lower case, no punctuation, single spaces.
+    "Creamy Chicken & Tomato Spaghetti!" and "creamy chicken tomato spaghetti" match.
+    """
+    words = re.sub(r"[^a-z0-9]+", " ", title.lower()).split()
+    return " ".join(word for word in words if word != "and")
+
+
+def last_cooked_lookup(cooked_log):
+    """
+    From the cooking diary, the latest date for each recipe, found two ways:
+    by My recipes id (exact) and by simplified title (for Claude's own ideas).
+    """
+    by_my_recipe, by_title = {}, {}
+    for entry in cooked_log:  # oldest first, so later entries win
+        when = datetime.fromisoformat(entry["cooked_at"]).date()
+        by_title[title_key(entry["title"])] = when
+        if entry["my_recipe_id"] is not None:
+            by_my_recipe[entry["my_recipe_id"]] = when
+    return by_my_recipe, by_title
+
+
+def when_last_cooked(recipe, lookup):
+    """The date this recipe was last cooked, or None. Works for suggestions and My recipes."""
+    by_my_recipe, by_title = lookup
+    for my_id in (recipe.get("from_my_recipe_id"), recipe.get("saved_as_my_recipe_id"), recipe.get("my_recipe_id")):
+        if my_id is not None and my_id in by_my_recipe:
+            return by_my_recipe[my_id]
+    return by_title.get(title_key(recipe["title"]))
+
+
+def format_cooked_date(when, today=None):
+    """Show a date like "9 Nov", adding the year if it isn't this year."""
+    if when is None:
+        return ""
+    today = today or date.today()
+    if when == today:
+        return "today"
+    if when.year == today.year:
+        return f"{when.day} {when.strftime('%b')}"
+    return f"{when.day} {when.strftime('%b %Y')}"

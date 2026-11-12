@@ -470,3 +470,15 @@ details.category summary h2 { margin: 0; }
   transition: transform 0.15s;
 }
 details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
+
+/* ---------- Cooked before ---------- */
+
+.cooked-before {
+  display: inline-block;
+  background: #c9f7d4;
+  border: 2px solid var(--outline);
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-weight: 800;
+  margin: 0 8px 8px 0;
+}

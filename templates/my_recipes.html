@@ -13,6 +13,7 @@
         <li class="item">
           <a href="{{ url_for('my_recipe_page', recipe_id=recipe.id) }}" class="item-link">
             <span class="item-name">{{ recipe.title }}</span>
+            {% if recipe.last_cooked %}<span class="item-amount">✅ last cooked {{ recipe.last_cooked }}</span>{% endif %}
           </a>
         </li>
       {% endfor %}

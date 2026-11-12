@@ -92,3 +92,22 @@ def test_recipe_page_warns_after_cooking(tmp_path):
     client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "100"})
     page = client.get("/recipes/1")
     assert b"already started cooking this" in page.data
+
+
+def test_cooked_recipes_are_flagged_when_suggested_again(tmp_path):
+    client = make_client(tmp_path)
+    page = client.get("/suggest").data
+    assert b"Cooked before" not in page
+
+    client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "100"})
+
+    client.post("/suggest", data={})          # Claude suggests the same recipe again
+    page = client.get("/suggest").data
+    assert b"Cooked before \xc2\xb7 last on today" in page
+
+
+def test_my_recipes_list_shows_when_last_cooked(tmp_path):
+    client = make_client(tmp_path)
+    client.post("/recipes/1/save", data={"back": "recipe"})     # becomes My recipe 1
+    client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "100"})
+    assert b"last cooked today" in client.get("/my-recipes").data

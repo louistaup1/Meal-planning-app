@@ -43,6 +43,17 @@ def init_db(db_path):
             )
             """
         )
+        # A diary of what you've cooked: one line each time you tap "Start cooking".
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS cooked_log (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                title        TEXT NOT NULL,
+                my_recipe_id INTEGER,
+                cooked_at    TEXT NOT NULL
+            )
+            """
+        )
         # Each suggested recipe is saved here, so you can open it again later.
         connection.execute(
             """
@@ -181,3 +192,23 @@ def get_my_recipe(db_path, recipe_id):
 def delete_my_recipe(db_path, recipe_id):
     with connect(db_path) as connection:
         connection.execute("DELETE FROM my_recipes WHERE id = ?", (recipe_id,))
+
+
+# --- Cooking diary --------------------------------------------------------------
+
+def add_cooked(db_path, title, my_recipe_id=None, cooked_at=None):
+    """Note that a recipe was cooked (now, unless a time is given)."""
+    if cooked_at is None:
+        cooked_at = datetime.now().isoformat(timespec="minutes")
+    with connect(db_path) as connection:
+        connection.execute(
+            "INSERT INTO cooked_log (title, my_recipe_id, cooked_at) VALUES (?, ?, ?)",
+            (title, my_recipe_id, cooked_at),
+        )
+
+
+def get_cooked_log(db_path):
+    """Everything you've cooked, oldest first."""
+    with connect(db_path) as connection:
+        rows = connection.execute("SELECT * FROM cooked_log ORDER BY cooked_at").fetchall()
+    return [dict(row) for row in rows]

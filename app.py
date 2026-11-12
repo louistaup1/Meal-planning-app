@@ -26,6 +26,9 @@ from recipes import (
     STYLES,
     build_request,
     check_against_pantry,
+    format_cooked_date,
+    last_cooked_lookup,
+    when_last_cooked,
     link_to_my_recipe,
     mark_saved,
     read_filters,
@@ -248,6 +251,11 @@ def create_app(
         my_recipe_ids = {r["id"] for r in database.get_all_my_recipes(app.config["DB_PATH"])}
         suggestions = [mark_saved(s, my_recipe_ids) for s in suggestions]
 
+        # Show "✅ Cooked before" on recipes in your cooking diary.
+        lookup = last_cooked_lookup(database.get_cooked_log(app.config["DB_PATH"]))
+        for suggestion in suggestions:
+            suggestion["last_cooked"] = format_cooked_date(when_last_cooked(suggestion, lookup))
+
         return render_template(
             "suggest.html",
             filters=filters,
@@ -337,6 +345,11 @@ def create_app(
 
         # Remember that it's been cooked, and what to buy.
         recipe["cooked"] = {"at": datetime.now().isoformat(timespec="minutes"), "to_buy": to_buy}
+        database.add_cooked(
+            app.config["DB_PATH"],
+            recipe["title"],
+            recipe.get("from_my_recipe_id") or recipe.get("saved_as_my_recipe_id"),
+        )
         database.update_suggestion(app.config["DB_PATH"], suggestion_id, recipe)
 
         message = f"Pantry updated: {len(changes)} item{'s' if len(changes) != 1 else ''} changed."
@@ -432,6 +445,10 @@ def create_app(
                 flash(f"Saved {title}.")
                 return redirect(url_for("my_recipes_page"))
         my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+        lookup = last_cooked_lookup(database.get_cooked_log(app.config["DB_PATH"]))
+        for recipe in my_recipes:
+            recipe["last_cooked"] = format_cooked_date(
+                when_last_cooked({"title": recipe["title"], "my_recipe_id": recipe["id"]}, lookup))
         return render_template("my_recipes.html", my_recipes=my_recipes, form=form, errors=errors)
 
     @app.route("/my-recipes/<int:recipe_id>")

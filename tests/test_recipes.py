@@ -6,9 +6,13 @@ from recipes import (
     build_request,
     check_against_pantry,
     describe_pantry,
+    format_cooked_date,
+    last_cooked_lookup,
     mark_saved,
     read_filters,
     recipe_to_text,
+    title_key,
+    when_last_cooked,
 )
 
 TODAY = date(2026, 11, 7)
@@ -161,3 +165,36 @@ def test_mark_saved_only_counts_copies_that_still_exist():
     assert mark_saved(dict(SUGGESTED, saved_as_my_recipe_id=5), {5, 6})["saved_my_recipe_id"] == 5
     assert mark_saved(dict(SUGGESTED, saved_as_my_recipe_id=5), {6})["saved_my_recipe_id"] is None
     assert mark_saved(SUGGESTED, {5})["saved_my_recipe_id"] is None
+
+
+
+# --- "Cooked before" -----------------------------------------------------------
+
+DIARY = [
+    {"title": "Creamy chicken & tomato spaghetti", "my_recipe_id": None, "cooked_at": "2026-10-01T19:00"},
+    {"title": "Grandma's risotto", "my_recipe_id": 7, "cooked_at": "2026-10-20T19:30"},
+    {"title": "Creamy Chicken and Tomato Spaghetti", "my_recipe_id": None, "cooked_at": "2026-11-09T20:00"},
+]
+
+
+def test_title_key_ignores_case_punctuation_and_and():
+    assert title_key("Creamy Chicken & Tomato Spaghetti!") == title_key("creamy chicken and tomato spaghetti")
+
+
+def test_latest_cooking_date_wins():
+    lookup = last_cooked_lookup(DIARY)
+    assert when_last_cooked({"title": "creamy chicken & tomato spaghetti"}, lookup) == date(2026, 11, 9)
+
+
+def test_my_recipes_match_by_id_even_if_renamed():
+    lookup = last_cooked_lookup(DIARY)
+    assert when_last_cooked({"title": "Nonna's risotto", "from_my_recipe_id": 7}, lookup) == date(2026, 10, 20)
+    assert when_last_cooked({"title": "Something new"}, lookup) is None
+
+
+def test_format_cooked_date():
+    today = date(2026, 11, 12)
+    assert format_cooked_date(date(2026, 11, 12), today) == "today"
+    assert format_cooked_date(date(2026, 11, 9), today) == "9 Nov"
+    assert format_cooked_date(date(2025, 12, 24), today) == "24 Dec 2025"
+    assert format_cooked_date(None, today) == ""

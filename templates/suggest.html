@@ -66,6 +66,7 @@
         ⏱ {{ recipe.total_minutes }} min · {% if recipe.dish_type %}{{ recipe.dish_type }} · {% endif %}{{ recipe.difficulty }} · {{ recipe.cuisine }} · serves {{ recipe.servings }}
       </p>
       {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
+      {% if recipe.last_cooked %}<p class="cooked-before">✅ Cooked before · last on {{ recipe.last_cooked }}</p>{% endif %}
       <p>{{ recipe.summary }}</p>
       {% if recipe.missing %}
         <p class="missing">🛒 You're missing: {{ recipe.missing | join(", ") }}</p>
