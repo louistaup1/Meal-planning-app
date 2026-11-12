@@ -75,15 +75,28 @@ def find_result(output, marker):
     return int(found[-1]) if found else None
 
 
+OPEN_A_CONSOLE = (
+    "PythonAnywhere only accepts typing into a Bash console that has been opened in a browser. "
+    "In Safari, open PythonAnywhere → Consoles → your Bash console (or start a new one), "
+    "wait for the $ prompt, then try again. You can close the tab afterwards."
+)
+
+
 def choose_console():
-    """Use the most recently opened Bash console on the account."""
+    """
+    Find a Bash console that's ready for typing, newest first.
+    A console is only ready once it has been opened in a browser; others answer 412.
+    """
     consoles = [c for c in call_api("GET", "/consoles/") if c["executable"] == "bash"]
-    if not consoles:
-        raise DeployError(
-            "There's no Bash console open on PythonAnywhere. Open one (Consoles → Bash) "
-            "once in Safari, then try again."
-        )
-    return consoles[-1]["id"]
+    for console in reversed(consoles):
+        try:
+            call_api("POST", f"/consoles/{console['id']}/send_input/", {"input": "\n"})
+        except DeployError as problem:
+            if " 412 " in str(problem):
+                continue  # not started in a browser yet; try the next one
+            raise
+        return console["id"]
+    raise DeployError(OPEN_A_CONSOLE)
 
 
 def run_in_console(console_id, command, wait_seconds=300):
