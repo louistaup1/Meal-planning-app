@@ -35,6 +35,7 @@ from recipes import (
 from pantry import (
     CATEGORIES,
     CATEGORY_EMOJI,
+    count_to_use_soon,
     SUGGESTED_UNITS,
     expiry_status,
     format_quantity,
@@ -89,6 +90,7 @@ def create_app(
     app.jinja_env.globals["expiry_status"] = expiry_status
     app.jinja_env.globals["format_quantity"] = format_quantity
     app.jinja_env.globals["category_emoji"] = CATEGORY_EMOJI
+    app.jinja_env.globals["count_to_use_soon"] = count_to_use_soon
 
     # --- Password lock -----------------------------------------------------
 

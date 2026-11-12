@@ -49,3 +49,13 @@ def test_invalid_form_shows_errors_and_saves_nothing(client):
     })
     assert b"Please enter a name." in page.data
     assert b"Your pantry is empty" in client.get("/").data
+
+
+def test_categories_fold_and_show_counts(client):
+    client.post("/items/new", data={"name": "Rice", "category": "Dry pantry",
+                                    "quantity": "1", "unit": "kg", "expiry_date": ""})
+    client.post("/items/new", data={"name": "Pasta", "category": "Dry pantry",
+                                    "quantity": "500", "unit": "g", "expiry_date": ""})
+    page = client.get("/").data
+    assert b'<details class="category category-dry-pantry" data-category="Dry pantry" open>' in page
+    assert b"2 items" in page

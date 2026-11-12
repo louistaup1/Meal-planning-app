@@ -212,3 +212,8 @@ def top_up_target(item, pantry_items):
     if existing is not None and same_unit(existing["unit"], item["unit"]):
         return existing
     return None
+
+
+def count_to_use_soon(items, today=None):
+    """How many items expire soon or have expired, shown on a folded category's heading."""
+    return sum(1 for item in items if expiry_status(item["expiry_date"], today) in ("soon", "expired"))

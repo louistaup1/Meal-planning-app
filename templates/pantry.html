@@ -18,8 +18,14 @@
   {% endif %}
 
   {% for category, items in groups %}
-    <section class="category category-{{ category | lower | replace(' ', '-') }}">
-      <h2>{{ category_emoji[category] }} {{ category }}</h2>
+    {% set to_use = count_to_use_soon(items) %}
+    <details class="category category-{{ category | lower | replace(' ', '-') }}" data-category="{{ category }}" open>
+      <summary>
+        <h2>{{ category_emoji[category] }} {{ category }}</h2>
+        <span class="category-count">{{ items | length }} item{{ 's' if items | length != 1 }}</span>
+        {% if to_use %}<span class="use-me-count">USE ME! × {{ to_use }}</span>{% endif %}
+        <span class="fold-arrow" aria-hidden="true">▾</span>
+      </summary>
       <ul class="item-list">
         {% for item in items %}
           {% set status = expiry_status(item.expiry_date) %}
@@ -37,6 +43,27 @@
           </li>
         {% endfor %}
       </ul>
-    </section>
+    </details>
   {% endfor %}
+
+  <script>
+    // Remember which categories you folded away, on this iPad only.
+    var FOLDED_KEY = "pantry-chef-folded-categories";
+    function readFolded() {
+      try { return JSON.parse(localStorage.getItem(FOLDED_KEY)) || []; } catch (e) { return []; }
+    }
+    function saveFolded(list) {
+      try { localStorage.setItem(FOLDED_KEY, JSON.stringify(list)); } catch (e) { /* not saved: fine */ }
+    }
+    var folded = readFolded();
+    document.querySelectorAll("details.category").forEach(function (section) {
+      var name = section.dataset.category;
+      if (folded.indexOf(name) !== -1) { section.open = false; }
+      section.addEventListener("toggle", function () {
+        var list = readFolded().filter(function (n) { return n !== name; });
+        if (!section.open) { list.push(name); }
+        saveFolded(list);
+      });
+    });
+  </script>
 {% endblock %}

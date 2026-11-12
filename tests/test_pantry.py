@@ -5,6 +5,7 @@ from datetime import date
 from pantry import (
     CATEGORIES,
     CATEGORY_EMOJI,
+    count_to_use_soon,
     expiry_status,
     format_quantity,
     group_by_category,
@@ -108,3 +109,13 @@ def test_group_by_category_follows_category_order_and_sorts_names():
 
 def test_every_category_has_an_emoji():
     assert set(CATEGORY_EMOJI) == set(CATEGORIES)
+
+
+def test_count_to_use_soon_counts_soon_and_expired_items():
+    items = [
+        {"name": "Milk", "expiry_date": date(2026, 11, 7)},    # soon
+        {"name": "Cream", "expiry_date": date(2026, 11, 1)},   # expired
+        {"name": "Cheese", "expiry_date": date(2026, 12, 1)},  # fine
+        {"name": "Rice", "expiry_date": None},
+    ]
+    assert count_to_use_soon(items, TODAY) == 2

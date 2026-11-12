@@ -441,3 +441,32 @@ button[disabled] { opacity: 0.6; }
   padding: 6px 12px;
   font-weight: 800;
 }
+
+/* ---------- Folding pantry categories ---------- */
+
+details.category summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin: 24px 0 12px;
+}
+details.category summary::-webkit-details-marker { display: none; }
+details.category summary h2 { margin: 0; }
+.category-count { color: var(--muted); font-weight: 700; font-size: 15px; }
+.use-me-count {
+  background: var(--yellow);
+  border: 2px solid var(--outline);
+  border-radius: 8px;
+  padding: 1px 8px;
+  font: 700 12px "Fredoka", sans-serif;
+  transform: rotate(-4deg);
+}
+.fold-arrow {
+  margin-left: auto;
+  font-size: 22px;
+  font-weight: 800;
+  transition: transform 0.15s;
+}
+details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
