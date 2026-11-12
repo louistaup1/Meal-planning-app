@@ -20,9 +20,22 @@ suggestions and a cook flow that updates the pantry. It's an MVP that works and 
 - Hosted on **PythonAnywhere** (free account): username `ltaup1`, site `https://ltaup1.pythonanywhere.com`,
   code in `~/Meal-planning-app`, virtualenv `pantry-chef`. The free plan *can* reach `api.anthropic.com`.
 - The GitHub repository is **public**. Never commit secrets.
-- Deploying is currently manual, done by the user in a PythonAnywhere Bash console. Always give
-  all five lines, even when nothing new needs installing, and remind them to tap **Reload** on the
-  Web tab afterwards:
+- **Claude deploys** with `.venv/bin/python scripts/deploy.py` once changes are merged and pushed
+  to `main`. It types `git pull`, `pip install` and `pytest` into the user's PythonAnywhere Bash
+  console through the PythonAnywhere API, reloads the site only if the tests pass, then checks the
+  login page loads. Add `--smoke recipes|photos|all` to run `scripts/smoke_test.py` on
+  PythonAnywhere: real Claude requests with the app's own key (about 5–10 cents for recipes,
+  2–4 cents for photos). Run the smoke test after changes that touch Claude requests.
+- Deploying changes the live site, so get the user's OK in the conversation first (Claude Code's
+  safety check also asks for it).
+- If the deploy says no console is ready (PythonAnywhere error 412), ask the user to open their
+  Bash console in Safari (PythonAnywhere → Consoles) and wait for the `$` prompt, then retry.
+- The PythonAnywhere token is saved as a network secret on the **"Meal-planning-app"** cloud
+  environment (the proxy adds it; it's never in code). That environment also allows
+  `ltaup1.pythonanywhere.com` and has a setup script that installs `requirements.txt`.
+  This cloud session can't call the Claude API directly; real-Claude checks run on PythonAnywhere.
+- Manual fallback for the user, if deploying from here isn't possible (give all five lines, then
+  remind them to tap **Reload** on the Web tab):
   ```
   cd ~/Meal-planning-app
   workon pantry-chef
@@ -30,7 +43,8 @@ suggestions and a cook flow that updates the pantry. It's an MVP that works and 
   pip install -r requirements.txt
   pytest
   ```
-  A new console starts in `~` without the virtualenv, so `cd` and `workon` matter.
+- The free PythonAnywhere site must be renewed before **7 December 2026** (Web tab →
+  "Run until 3 months from today"). Remind the user as that date gets close.
 - Their pantry data lives in `pantry.db` on PythonAnywhere. Changes must never lose it.
 
 ## Stack and layout
@@ -100,5 +114,5 @@ to paste a key into the chat.
   when asked, one at a time.
 - Parked idea: a "What are you in the mood for?" text box above the filters, plus at most one
   clarifying question from Claude (mockups were made). Don't build it unless asked.
-- This cloud environment can't reach most websites (for example recipe sites) and has no
-  PythonAnywhere access.
+- This cloud environment can't reach most websites (for example recipe sites). Ask the user before
+  allowing new hosts.
