@@ -36,11 +36,24 @@ RECEIPT_LINES = ["CORNER SHOP", "", "MILK 1L x2      2.40", "BANANAS 6       1.1
                  "WASHING UP LIQ  1.99", "", "TOTAL           5.49"]
 
 
+# A pretend dislike, to check Claude respects ratings and their reasons.
+PRETEND_RATINGS = [{"title_key": "spaghetti aglio olio e peperoncino", "title": "Spaghetti aglio, olio e peperoncino",
+                    "rating": -1, "note": "too spicy", "my_recipe_id": None, "rated_at": "2026-11-17T19:00:00"}]
+SPICY_WORDS = ("chilli", "chili", "peperoncino", "cayenne", "jalape")
+
+
 def check_recipes():
-    """Ask Claude for real suggestions and check they look like recipes that use the pantry."""
-    request_text = build_request(PRETEND_PANTRY, read_filters({"cuisine": "Italian", "people": "2"}))
+    """Ask Claude for real suggestions and check they use the pantry and respect the dislike."""
+    request_text = build_request(PRETEND_PANTRY, read_filters({"cuisine": "Italian", "people": "2"}),
+                                 ratings=PRETEND_RATINGS)
     recipes = ai_client.suggest_recipes(request_text)
     problems = []
+    for recipe in recipes:
+        text = (recipe["title"] + " " + " ".join(i["name"] for i in recipe["ingredients"])).lower()
+        if "peperoncino" in recipe["title"].lower() or "aglio" in recipe["title"].lower():
+            problems.append(f"{recipe['title']} was disliked and shouldn't be suggested again")
+        if any(word in text for word in SPICY_WORDS):
+            problems.append(f"{recipe['title']} uses chilli, but the dislike said 'too spicy'")
     if not 1 <= len(recipes) <= 3:
         problems.append(f"expected 1-3 recipes, got {len(recipes)}")
     for recipe in recipes:

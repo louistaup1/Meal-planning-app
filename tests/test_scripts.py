@@ -61,3 +61,24 @@ def test_smoke_tidy_check_spots_untidy_answers(monkeypatch):
     assert "'salt and pepper' should be split into two ingredients" in problems
     assert "servings should be 2, got 4" in problems
     assert "the method should be split into steps" in problems
+
+
+def test_smoke_recipe_check_spots_ignored_dislikes(monkeypatch):
+    sent = []
+    spicy = {"title": "Spaghetti aglio, olio e peperoncino", "summary": "", "cuisine": "Italian",
+             "difficulty": "Easy", "dish_type": "Main", "style": "Quick", "total_minutes": 15, "servings": 2,
+             "ingredients": [{"name": "Spaghetti", "amount": 200, "unit": "g", "pantry_item_id": 1,
+                              "is_staple": False},
+                             {"name": "Chilli flakes", "amount": 1, "unit": "tsp", "pantry_item_id": None,
+                              "is_staple": False}],
+             "steps": ["Cook."], "from_my_recipe_id": None}
+
+    def pretend(text):
+        sent.append(text)
+        return [spicy]
+
+    monkeypatch.setattr(smoke_test.ai_client, "suggest_recipes", pretend)
+    problems = smoke_test.check_recipes()
+    assert "too spicy" in sent[0]
+    assert "Spaghetti aglio, olio e peperoncino was disliked and shouldn't be suggested again" in problems
+    assert "Spaghetti aglio, olio e peperoncino uses chilli, but the dislike said 'too spicy'" in problems
