@@ -52,6 +52,19 @@ def init_db(db_path):
             )
             """
         )
+        # Your 👍 / 👎 ratings, one per recipe (matched by simplified title).
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ratings (
+                title_key    TEXT PRIMARY KEY,
+                title        TEXT NOT NULL,
+                rating       INTEGER NOT NULL,
+                note         TEXT NOT NULL DEFAULT '',
+                my_recipe_id INTEGER,
+                rated_at     TEXT NOT NULL
+            )
+            """
+        )
         # A diary of what you've cooked: one line each time you tap "Start cooking".
         connection.execute(
             """
@@ -239,4 +252,30 @@ def get_cooked_log(db_path):
     """Everything you've cooked, oldest first."""
     with connect(db_path) as connection:
         rows = connection.execute("SELECT * FROM cooked_log ORDER BY cooked_at").fetchall()
+    return [dict(row) for row in rows]
+
+
+# --- Ratings (👍 / 👎) -------------------------------------------------------------
+
+def save_rating(db_path, key, title, rating, note="", my_recipe_id=None):
+    """Store your rating for a recipe: 1 for 👍, -1 for 👎. Replaces any earlier rating."""
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT OR REPLACE INTO ratings (title_key, title, rating, note, my_recipe_id, rated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (key, title, rating, note, my_recipe_id, datetime.now().isoformat(timespec="seconds")),
+        )
+
+
+def delete_rating(db_path, key):
+    with connect(db_path) as connection:
+        connection.execute("DELETE FROM ratings WHERE title_key = ?", (key,))
+
+
+def get_ratings(db_path):
+    """All your ratings, newest first."""
+    with connect(db_path) as connection:
+        rows = connection.execute("SELECT * FROM ratings ORDER BY rated_at DESC").fetchall()
     return [dict(row) for row in rows]

@@ -116,8 +116,8 @@ def link_to_my_recipe(recipe, my_recipes):
     return linked
 
 
-def build_request(pantry_items, filters, today=None, my_recipes=()):
-    """Write the message we send to Claude: the pantry, the filters, and your saved recipes."""
+def build_request(pantry_items, filters, today=None, my_recipes=(), ratings=()):
+    """Write the message we send to Claude: the pantry, the filters, your recipes and your ratings."""
     wishes = []
     if filters["cuisine"] != "Any":
         wishes.append(f"Cuisine: {filters['cuisine']}")
@@ -136,6 +136,7 @@ def build_request(pantry_items, filters, today=None, my_recipes=()):
         f"My pantry:\n{describe_pantry(pantry_items, today)}\n\n"
         f"My preferences:\n{wishes_text}"
         + (f"\n\nMy saved recipes:\n{describe_my_recipes(my_recipes)}" if my_recipes else "")
+        + describe_ratings(ratings)
     )
 
 
@@ -333,3 +334,47 @@ def recipe_for_cooking(details, my_recipe_id, pantry_items):
         linked["pantry_item_id"] = match["id"] if match else None
         recipe["ingredients"].append(linked)
     return recipe
+
+
+
+# --- Ratings (👍 / 👎) -------------------------------------------------------------
+
+# How many recent likes and dislikes are shared with Claude, to keep requests short.
+MAX_RATINGS_SHARED = 15
+
+
+def rating_key(recipe):
+    """
+    The key a rating is stored under. Your own recipes use their My recipes id, so a
+    rating survives renaming; Claude's ideas use their simplified title.
+    """
+    my_id = recipe.get("from_my_recipe_id") or recipe.get("saved_as_my_recipe_id") or recipe.get("my_recipe_id")
+    if my_id is not None:
+        return f"my:{my_id}"
+    return title_key(recipe["title"])
+
+
+def find_rating(recipe, ratings):
+    """Your rating for this recipe, or None. Also finds a rating given before it was saved to My recipes."""
+    by_key = {rating["title_key"]: rating for rating in ratings}
+    return by_key.get(rating_key(recipe)) or by_key.get(title_key(recipe["title"]))
+
+
+def describe_ratings(ratings):
+    """The ratings part of the request to Claude: recent likes and dislikes, with reasons."""
+    def lines(wanted):
+        chosen = [r for r in ratings if r["rating"] == wanted][:MAX_RATINGS_SHARED]  # newest first
+        return "\n".join(f"- {r['title']}" + (f" (why: {r['note']})" if r["note"] else "") for r in chosen)
+
+    text = ""
+    liked, disliked = lines(1), lines(-1)
+    if liked:
+        text += f"\n\nRecipes I liked:\n{liked}"
+    if disliked:
+        text += f"\n\nRecipes I disliked:\n{disliked}"
+    return text
+
+
+def disliked_my_recipe_ids(ratings):
+    """Your own recipes you've given a 👎, so they aren't offered to Claude any more."""
+    return {r["my_recipe_id"] for r in ratings if r["rating"] == -1 and r["my_recipe_id"] is not None}

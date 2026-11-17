@@ -89,7 +89,13 @@ total_minutes is the total time, including preparation.
 The person may also share "My saved recipes". Treat them as options alongside new ideas, \
 with no special priority. When you suggest one of them, set from_my_recipe_id to its id \
 and follow it closely (you may scale amounts for the number of people, and use the pantry's \
-units). Otherwise set from_my_recipe_id to null."""
+units). Otherwise set from_my_recipe_id to null.
+
+The person may also list recipes they liked and disliked, sometimes with a reason. Use them \
+to understand their taste: lean towards dishes like the ones they liked, never suggest a \
+disliked recipe again, avoid close variations of it, and respect the reasons given (for \
+example, "too spicy" means keep every suggestion mild). A liked recipe may be suggested \
+again when it fits the pantry and preferences."""
 
 
 class TidyIngredient(BaseModel):

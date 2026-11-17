@@ -27,6 +27,7 @@ from recipes import (
     build_request,
     check_against_pantry,
     details_from_suggestion,
+    disliked_my_recipe_ids,
     format_cooked_date,
     last_cooked_lookup,
     when_last_cooked,
@@ -231,7 +232,8 @@ def create_app(
             else:
                 try:
                     my_recipes = my_recipes_for_claude()
-                    request_text = build_request(pantry_items, filters, my_recipes=my_recipes)
+                    ratings = database.get_ratings(app.config["DB_PATH"])
+                    request_text = build_request(pantry_items, filters, my_recipes=my_recipes, ratings=ratings)
                     recipes = suggest_recipes(request_text)
                 except ai_client.SuggestionError as problem:
                     error = str(problem)
@@ -497,8 +499,9 @@ def create_app(
         return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
 
     def my_recipes_for_claude():
-        """Your recipes as sent to Claude: the tidied version where there is one."""
-        my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
+        """Your recipes as sent to Claude: the tidied version where there is one. Not ones you've 👎'd."""
+        disliked = disliked_my_recipe_ids(database.get_ratings(app.config["DB_PATH"]))
+        my_recipes = [r for r in database.get_all_my_recipes(app.config["DB_PATH"]) if r["id"] not in disliked]
         for recipe in my_recipes:
             details = database.get_my_recipe_details(app.config["DB_PATH"], recipe["id"])
             if details:
