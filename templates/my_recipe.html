@@ -5,6 +5,9 @@
 {% block content %}
   <p><a href="{{ url_for('my_recipes_page') }}">← Back to my recipes</a></p>
   <h1>{{ recipe.title }}</h1>
+  {% with rating=recipe.rating, rate_url=url_for('rate_my_recipe_action', recipe_id=recipe.id), back="my_recipe" %}
+    {% include "_rating.html" %}
+  {% endwith %}
 
   {% if details %}
     <p class="recipe-facts">

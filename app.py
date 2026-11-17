@@ -28,6 +28,10 @@ from recipes import (
     check_against_pantry,
     details_from_suggestion,
     disliked_my_recipe_ids,
+    find_rating,
+    rating_change,
+    rating_key,
+    title_key,
     format_cooked_date,
     last_cooked_lookup,
     when_last_cooked,
@@ -258,8 +262,10 @@ def create_app(
 
         # Show "✅ Cooked before" on recipes in your cooking diary.
         lookup = last_cooked_lookup(database.get_cooked_log(app.config["DB_PATH"]))
+        ratings = database.get_ratings(app.config["DB_PATH"])
         for suggestion in suggestions:
             suggestion["last_cooked"] = format_cooked_date(when_last_cooked(suggestion, lookup))
+            suggestion["rating"] = find_rating(suggestion, ratings)
 
         return render_template(
             "suggest.html",
@@ -273,6 +279,50 @@ def create_app(
             suggestions=suggestions,
             error=error,
         )
+
+    # --- 👍 / 👎 ratings -----------------------------------------------------
+
+    def apply_rating(recipe, my_recipe_id=None):
+        """Store what the rating buttons asked for, for this recipe."""
+        key = rating_key(recipe)
+        ratings = database.get_ratings(app.config["DB_PATH"])
+        change = rating_change(find_rating(recipe, ratings), request.form.get("choice", ""),
+                               request.form.get("note", ""))
+        old_title_key = title_key(recipe["title"])
+        if change[0] == "save":
+            database.save_rating(app.config["DB_PATH"], key, recipe["title"], change[1], change[2], my_recipe_id)
+            if old_title_key != key:
+                database.delete_rating(app.config["DB_PATH"], old_title_key)  # rated before it was saved
+        elif change[0] == "delete":
+            database.delete_rating(app.config["DB_PATH"], key)
+            database.delete_rating(app.config["DB_PATH"], old_title_key)
+
+    def back_to(page, suggestion_id=None, my_recipe_id=None):
+        """Go back to the page the rating buttons were on."""
+        if page == "suggest":
+            return redirect(url_for("suggest_page"))
+        if page == "cooking":
+            return redirect(url_for("cooking_page", suggestion_id=suggestion_id))
+        if page == "my_recipe":
+            return redirect(url_for("my_recipe_page", recipe_id=my_recipe_id))
+        return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
+
+    @app.route("/recipes/<int:suggestion_id>/rate", methods=["POST"])
+    def rate_suggestion_action(suggestion_id):
+        recipe = database.get_suggestion(app.config["DB_PATH"], suggestion_id)
+        if recipe is None:
+            abort(404)
+        my_id = recipe.get("from_my_recipe_id") or recipe.get("saved_as_my_recipe_id")
+        apply_rating(recipe, my_id)
+        return back_to(request.form.get("back"), suggestion_id=suggestion_id)
+
+    @app.route("/my-recipes/<int:recipe_id>/rate", methods=["POST"])
+    def rate_my_recipe_action(recipe_id):
+        recipe = database.get_my_recipe(app.config["DB_PATH"], recipe_id)
+        if recipe is None:
+            abort(404)
+        apply_rating({"title": recipe["title"], "my_recipe_id": recipe_id}, recipe_id)
+        return back_to("my_recipe", my_recipe_id=recipe_id)
 
     # --- Saving a suggestion to My recipes ---------------------------------
 
@@ -307,6 +357,7 @@ def create_app(
         my_recipe_ids = {r["id"] for r in database.get_all_my_recipes(app.config["DB_PATH"])}
         checked = mark_saved(check_against_pantry(recipe, pantry_items), my_recipe_ids)
         checked["id"] = suggestion_id
+        checked["rating"] = find_rating(checked, database.get_ratings(app.config["DB_PATH"]))
         staples = [i["name"] for i in checked["ingredients"] if i["status"] == "assumed"]
         return render_template(
             "recipe.html",
@@ -372,6 +423,8 @@ def create_app(
             abort(404)
         if "cooked" not in recipe:
             return redirect(url_for("recipe_page", suggestion_id=suggestion_id))
+        recipe["id"] = suggestion_id
+        recipe["rating"] = find_rating(recipe, database.get_ratings(app.config["DB_PATH"]))
         return render_template("cooking.html", recipe=recipe, suggestion_id=suggestion_id)
 
     # --- Add from photos (receipts, shelves, spice jars...) --------------
@@ -453,7 +506,9 @@ def create_app(
                 return redirect(url_for("my_recipe_page", recipe_id=recipe_id))
         my_recipes = database.get_all_my_recipes(app.config["DB_PATH"])
         lookup = last_cooked_lookup(database.get_cooked_log(app.config["DB_PATH"]))
+        ratings = database.get_ratings(app.config["DB_PATH"])
         for recipe in my_recipes:
+            recipe["rating"] = find_rating({"title": recipe["title"], "my_recipe_id": recipe["id"]}, ratings)
             recipe["tidy"] = database.get_my_recipe_details(app.config["DB_PATH"], recipe["id"]) is not None
             recipe["last_cooked"] = format_cooked_date(
                 when_last_cooked({"title": recipe["title"], "my_recipe_id": recipe["id"]}, lookup))
@@ -465,6 +520,8 @@ def create_app(
         if recipe is None:
             abort(404)
         details = database.get_my_recipe_details(app.config["DB_PATH"], recipe_id)
+        recipe["rating"] = find_rating({"title": recipe["title"], "my_recipe_id": recipe_id},
+                                       database.get_ratings(app.config["DB_PATH"]))
         return render_template("my_recipe.html", recipe=recipe, details=details)
 
     def tidy_and_save(recipe_id, title, text, done_message):

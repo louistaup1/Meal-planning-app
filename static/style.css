@@ -486,3 +486,32 @@ details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
 /* ---------- Tidied My recipes ---------- */
 
 .original-text { white-space: pre-wrap; line-height: 1.45; padding-top: 12px; }
+
+/* ---------- 👍 / 👎 ratings ---------- */
+
+.rating-box { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0; }
+.rate-buttons { display: flex; gap: 10px; }
+.rate-button {
+  font-size: 22px;
+  line-height: 1;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--outline);
+  cursor: pointer;
+  filter: grayscale(0.7);
+  opacity: 0.8;
+}
+.rate-button.is-on { background: var(--mint); filter: none; opacity: 1; transform: rotate(-4deg); }
+.rate-button.is-on.is-dislike { background: #ffd6d6; transform: rotate(4deg); }
+.rating-note { display: flex; gap: 8px; flex: 1; min-width: 240px; }
+.rating-note input[type="text"] {
+  flex: 1;
+  padding: 10px 12px;
+  font: 700 16px "Nunito", sans-serif;
+  border: 3px solid var(--outline);
+  border-radius: 12px;
+}
+.note-button { padding: 8px 14px; font-size: 15px; }
+.done-button { margin-top: 12px; }

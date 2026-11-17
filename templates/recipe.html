@@ -15,6 +15,9 @@
   {% if recipe.from_my_recipe_id %}<p class="from-mine">📖 From my recipes</p>{% endif %}
   <p>{{ recipe.summary }}</p>
   <div class="card-buttons">{% include "_save_button.html" %}</div>
+  {% with rating=recipe.rating, rate_url=url_for('rate_suggestion_action', suggestion_id=recipe.id), back="recipe" %}
+    {% include "_rating.html" %}
+  {% endwith %}
 
   {% if recipe.cooked %}
     <p class="notice">You've already started cooking this.

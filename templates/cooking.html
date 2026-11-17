@@ -26,5 +26,11 @@
     {% endfor %}
   </ol>
 
-  <a href="{{ url_for('pantry_page') }}" class="button primary">🎉 Done, back to my pantry</a>
+  <h2>How was it?</h2>
+  <p class="hint">Your 👍 and 👎 help Claude suggest things you'll enjoy.</p>
+  {% with rating=recipe.rating, rate_url=url_for('rate_suggestion_action', suggestion_id=suggestion_id), back="cooking" %}
+    {% include "_rating.html" %}
+  {% endwith %}
+
+  <a href="{{ url_for('pantry_page') }}" class="button primary done-button">🎉 Done, back to my pantry</a>
 {% endblock %}

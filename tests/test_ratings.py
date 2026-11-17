@@ -66,3 +66,129 @@ def test_ratings_are_added_to_the_request():
 
 def test_disliked_my_recipes_are_left_out():
     assert disliked_my_recipe_ids(RATINGS) == {4}
+
+
+# --- What a tap does ------------------------------------------------------------
+
+from recipes import rating_change  # noqa: E402
+
+
+def test_rating_change():
+    liked = {"rating": 1, "note": "yum"}
+    assert rating_change(None, "like") == ("save", 1, "")
+    assert rating_change(liked, "like") == ("delete",)                      # tap again to undo
+    assert rating_change(liked, "dislike") == ("save", -1, "")              # switching starts afresh
+    assert rating_change(liked, "note", "  kids loved it ") == ("save", 1, "kids loved it")
+    assert rating_change(None, "note", "orphan") == ("nothing",)
+    assert rating_change(liked, "nonsense") == ("nothing",)
+    assert rating_change(liked, "note", "x" * 500)[2] == "x" * 200
+
+
+# --- The pages ----------------------------------------------------------------
+
+import ai_client  # noqa: E402
+from app import create_app  # noqa: E402
+
+
+def tidy_fails(title, text):
+    raise ai_client.SuggestionError("Pretend: not tidied.")
+
+SUGGESTION = {
+    "title": "Spicy chicken curry", "summary": "Hot!", "cuisine": "Indian", "difficulty": "Easy",
+    "dish_type": "Main", "style": "Comfort", "total_minutes": 40, "servings": 2,
+    "ingredients": [{"name": "Rice", "amount": 150, "unit": "g", "pantry_item_id": 1, "is_staple": False}],
+    "steps": ["Cook it."], "from_my_recipe_id": None,
+}
+
+
+class PretendSuggest:
+    def __init__(self, recipes=None):
+        self.recipes = recipes if recipes is not None else [SUGGESTION]
+        self.requests = []
+
+    def __call__(self, request_text):
+        self.requests.append(request_text)
+        return self.recipes
+
+
+def make_client(tmp_path, suggest=None):
+    app = create_app(db_path=tmp_path / "test.db", password="pw", suggest_recipes=suggest or PretendSuggest(),
+                     read_photo_items=lambda photos: [], tidy_recipe=tidy_fails)
+    app.config["TESTING"] = True
+    client = app.test_client()
+    client.post("/login", data={"password": "pw"})
+    client.post("/items/new", data={"name": "Rice", "category": "Dry pantry",
+                                    "quantity": "1", "unit": "kg", "expiry_date": ""})
+    return client
+
+
+def test_like_from_a_card_and_tap_again_to_undo(tmp_path):
+    client = make_client(tmp_path)
+    client.post("/suggest", data={})
+
+    page = client.post("/recipes/1/rate", data={"choice": "like", "back": "suggest"}, follow_redirects=True)
+    assert b'class="rate-button is-on"' in page.data
+    assert b"What should I cook?" in page.data              # back on the suggestions page
+    assert b'name="note"' in page.data                      # the "Why?" box appears
+
+    page = client.post("/recipes/1/rate", data={"choice": "like", "back": "suggest"}, follow_redirects=True)
+    assert b"is-on" not in page.data
+    assert b'name="note"' not in page.data
+
+
+def test_dislike_with_a_reason_guides_the_next_suggestion(tmp_path):
+    suggest = PretendSuggest()
+    client = make_client(tmp_path, suggest)
+    client.post("/suggest", data={})
+    client.post("/recipes/1/rate", data={"choice": "dislike", "back": "recipe"})
+    client.post("/recipes/1/rate", data={"choice": "note", "note": "too spicy", "back": "recipe"})
+
+    client.post("/suggest", data={})
+
+    assert "Recipes I disliked:\n- Spicy chicken curry (why: too spicy)" in suggest.requests[-1]
+
+
+def test_rating_from_the_cooking_page(tmp_path):
+    client = make_client(tmp_path)
+    client.post("/suggest", data={})
+    client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "150"})
+
+    page = client.get("/recipes/1/cooking")
+    assert b"How was it?" in page.data
+
+    page = client.post("/recipes/1/rate", data={"choice": "like", "back": "cooking"}, follow_redirects=True)
+    assert b"How was it?" in page.data
+    assert b'class="rate-button is-on"' in page.data
+
+
+def test_disliked_my_recipes_are_no_longer_offered_to_claude(tmp_path):
+    suggest = PretendSuggest(recipes=[])
+    client = make_client(tmp_path, suggest)
+    client.post("/my-recipes", data={"title": "Mushroom stroganoff", "text": "Mushrooms, cream."})
+
+    client.post("/suggest", data={})
+    assert "Mushroom stroganoff" in suggest.requests[-1]
+
+    page = client.post("/my-recipes/1/rate", data={"choice": "dislike"}, follow_redirects=True)
+    assert b"is-dislike" in page.data
+    client.post("/suggest", data={})
+    assert "My saved recipes" not in suggest.requests[-1]
+    assert "Recipes I disliked:\n- Mushroom stroganoff" in suggest.requests[-1]
+    assert "Mushroom stroganoff 👎".encode() in client.get("/my-recipes").data
+
+
+def test_a_rating_given_before_saving_is_kept_once(tmp_path):
+    suggest = PretendSuggest()
+    client = make_client(tmp_path, suggest)
+    client.post("/suggest", data={})
+    client.post("/recipes/1/rate", data={"choice": "like", "back": "recipe"})
+    client.post("/recipes/1/save", data={"back": "recipe"})            # now My recipe 1
+
+    page = client.get("/my-recipes/1")
+    assert b'class="rate-button is-on"' in page.data                 # still shows 👍
+
+    client.post("/my-recipes/1/rate", data={"choice": "note", "note": "a keeper"})
+    client.post("/suggest", data={})
+    liked_lines = [line for line in suggest.requests[-1].splitlines()
+                   if line.startswith("- ") and "Spicy chicken curry" in line]
+    assert liked_lines == ["- Spicy chicken curry (why: a keeper)"]

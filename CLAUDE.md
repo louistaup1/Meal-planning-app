@@ -59,7 +59,7 @@ Python 3.12, Flask, SQLite, Jinja templates, plain CSS, pytest. No front-end fra
 | `cooking.py` | Cook flow: "What did you use?" checklist, pantry changes, to-buy list |
 | `ai_client.py` | **The only file that calls Claude.** Model set in `MODEL` (Opus, the user's choice) |
 | `photos.py` | Shrinks photos (1568 px JPEG) and passes PDFs through for Claude |
-| `database.py` | SQLite tables `pantry_items`, `my_recipes`, `my_recipe_details` (tidied recipe JSON), `suggestions` (recipe JSON), `cooked_log` |
+| `database.py` | SQLite tables `pantry_items`, `my_recipes`, `my_recipe_details` (tidied recipe JSON), `suggestions` (recipe JSON), `cooked_log`, `ratings` |
 | `auth.py` | Single app password from `.env` |
 | `templates/`, `static/style.css` | Pages and the "Candy Pop" sticker-book design |
 | `tests/` | pytest, one file per area |
@@ -111,7 +111,9 @@ to paste a key into the chat.
 - Built: pantry (folding categories), password, Add from photos (receipts, PDFs, shelves,
   spices), My recipes (paste, tidied by Claude into ingredients and steps, or ⭐ Save; each can be
   cooked), suggestions with filters (meal, dish, cuisine, difficulty, style, people), cook flow,
-  cooking diary ("Cooked before" on suggestions), app icon.
+  cooking diary ("Cooked before" on suggestions), 👍 / 👎 ratings with optional reasons (the 15
+  most recent likes and dislikes go into each suggestion request; disliked My recipes aren't
+  offered to Claude), app icon.
 - Not built: weekly shopping lists, meal scheduling, user accounts, sharing. Only build these
   when asked, one at a time.
 - Parked idea: a "What are you in the mood for?" text box above the filters, plus at most one

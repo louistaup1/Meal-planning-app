@@ -378,3 +378,22 @@ def describe_ratings(ratings):
 def disliked_my_recipe_ids(ratings):
     """Your own recipes you've given a 👎, so they aren't offered to Claude any more."""
     return {r["my_recipe_id"] for r in ratings if r["rating"] == -1 and r["my_recipe_id"] is not None}
+
+
+def rating_change(current, choice, note=""):
+    """
+    What a tap on the rating buttons does. `current` is the existing rating (or None).
+      choice "like" / "dislike": set it; tapping the one already chosen removes it.
+                                 Switching between 👍 and 👎 starts the reason afresh.
+      choice "note":             save the reason for the existing rating.
+    Returns ("save", rating, note), ("delete",) or ("nothing",).
+    """
+    note = note.strip()[:200]
+    if choice in ("like", "dislike"):
+        value = 1 if choice == "like" else -1
+        if current and current["rating"] == value:
+            return ("delete",)
+        return ("save", value, "")
+    if choice == "note" and current:
+        return ("save", current["rating"], note)
+    return ("nothing",)

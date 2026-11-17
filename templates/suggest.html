@@ -77,6 +77,9 @@
         <a href="{{ url_for('recipe_page', suggestion_id=recipe.id) }}" class="button primary">Cook this</a>
         {% include "_save_button.html" %}
       </div>
+      {% with rating=recipe.rating, rate_url=url_for('rate_suggestion_action', suggestion_id=recipe.id), back="suggest" %}
+        {% include "_rating.html" %}
+      {% endwith %}
     </article>
   {% endfor %}
 

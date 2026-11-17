@@ -1,0 +1,25 @@
+{#
+  👍 / 👎 buttons and an optional "Why?" reason, shared by several pages.
+  Needs: rating (the current rating or none), rate_url, back (which page to return to).
+#}
+<div class="rating-box">
+  <form method="post" action="{{ rate_url }}" class="inline-form rate-buttons">
+    <input type="hidden" name="back" value="{{ back }}">
+    <button type="submit" name="choice" value="like" aria-label="I like this"
+            aria-pressed="{{ 'true' if rating and rating.rating == 1 else 'false' }}"
+            class="rate-button {% if rating and rating.rating == 1 %}is-on{% endif %}">👍</button>
+    <button type="submit" name="choice" value="dislike" aria-label="I don't like this"
+            aria-pressed="{{ 'true' if rating and rating.rating == -1 else 'false' }}"
+            class="rate-button {% if rating and rating.rating == -1 %}is-on is-dislike{% endif %}">👎</button>
+  </form>
+  {% if rating %}
+    <form method="post" action="{{ rate_url }}" class="inline-form rating-note">
+      <input type="hidden" name="back" value="{{ back }}">
+      <input type="hidden" name="choice" value="note">
+      <input type="text" name="note" value="{{ rating.note }}" maxlength="200"
+             placeholder="{{ 'Why? e.g. kids loved it' if rating.rating == 1 else 'Why? e.g. too spicy' }} (optional)"
+             aria-label="Why?">
+      <button type="submit" class="button note-button">Save reason</button>
+    </form>
+  {% endif %}
+</div>
