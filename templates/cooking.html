@@ -6,6 +6,7 @@
   <p><a href="{{ url_for('recipe_page', suggestion_id=suggestion_id) }}">← Back to the recipe</a></p>
   <h1>👩‍🍳 {{ recipe.title }}</h1>
   <p class="recipe-facts">⏱ {{ recipe.total_minutes }} min · serves {{ recipe.servings }}</p>
+  {% include "_keep_awake.html" %}
 
   {% if recipe.cooked.to_buy %}
     <h2>🛒 To buy</h2>

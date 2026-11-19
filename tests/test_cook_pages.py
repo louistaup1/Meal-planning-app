@@ -111,3 +111,20 @@ def test_my_recipes_list_shows_when_last_cooked(tmp_path):
     client.post("/recipes/1/save", data={"back": "recipe"})     # becomes My recipe 1
     client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "100"})
     assert b"last cooked today" in client.get("/my-recipes").data
+
+
+def test_recipe_screens_have_a_keep_screen_on_button(tmp_path):
+    client = make_client(tmp_path)
+    assert b'id="keep-awake"' in client.get("/recipes/1").data
+
+    client.post("/recipes/1/cook", data={"have_0": "on", "used_0": "100"})
+    page = client.get("/recipes/1/cooking").data
+    assert b'id="keep-awake"' in page
+    assert b"/static/keep_awake.js" in page
+
+
+def test_keep_awake_script_loads(tmp_path):
+    response = make_client(tmp_path).get("/static/keep_awake.js")
+    assert response.status_code == 200
+    assert b'navigator.wakeLock.request("screen")' in response.data
+    response.close()

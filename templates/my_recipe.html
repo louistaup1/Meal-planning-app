@@ -14,6 +14,7 @@
       ⏱ {{ details.total_minutes }} min · {{ details.dish_type }} · {{ details.difficulty }} ·
       {{ details.cuisine }} · serves {{ details.servings }}
     </p>
+    {% include "_keep_awake.html" %}
     <p>{{ details.summary }}</p>
 
     <form method="post" action="{{ url_for('cook_my_recipe_action', recipe_id=recipe.id) }}">

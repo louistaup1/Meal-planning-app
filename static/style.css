@@ -515,3 +515,10 @@ details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
 }
 .note-button { padding: 8px 14px; font-size: 15px; }
 .done-button { margin-top: 12px; }
+
+/* ---------- Keep screen on ---------- */
+
+.keep-awake-box { margin: 10px 0 14px; }
+.keep-awake-button { background: var(--card); font-size: 16px; padding: 8px 14px; }
+.keep-awake-button.is-on { background: var(--yellow); }
+.keep-awake-button[disabled] { opacity: 0.5; }

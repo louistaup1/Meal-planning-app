@@ -113,7 +113,8 @@ to paste a key into the chat.
   cooked), suggestions with filters (meal, dish, cuisine, difficulty, style, people), cook flow,
   cooking diary ("Cooked before" on suggestions), 👍 / 👎 ratings with optional reasons (the 15
   most recent likes and dislikes go into each suggestion request; disliked My recipes aren't
-  offered to Claude), app icon.
+  offered to Claude), "Keep screen on" on recipe screens (Screen Wake Lock, `static/keep_awake.js`),
+  app icon.
 - Not built: weekly shopping lists, meal scheduling, user accounts, sharing. Only build these
   when asked, one at a time.
 - Parked idea: a "What are you in the mood for?" text box above the filters, plus at most one

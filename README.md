@@ -23,6 +23,9 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
 - **👍 / 👎 ratings:** rate any suggestion, your own recipes, or a meal right after cooking
   ("How was it?"), with an optional reason like "too spicy". Claude leans towards what you
   liked, won't suggest your dislikes again, and respects your reasons.
+- **Keep screen on:** on recipe and cooking screens, tap **🔅 Keep screen on** so the iPad
+  doesn't lock while you cook. It stops when you press the lock button, leave the page or tap
+  it again, and switches itself back on next time if you left it on.
 - **Cooking diary:** suggestions you've cooked before show "✅ Cooked before · last on 9 Nov",
   and My recipes shows when you last cooked each one.
 - **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
@@ -73,7 +76,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `142 passed`.
+    You should see a line like `145 passed`.
 
 ### Part C: Create your secret settings file (.env)
 

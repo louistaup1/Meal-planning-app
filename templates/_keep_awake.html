@@ -1,0 +1,10 @@
+{# "Keep screen on" button for recipe screens. The work is done by static/keep_awake.js. #}
+<div class="keep-awake-box">
+  <button type="button" id="keep-awake" class="button keep-awake-button" aria-pressed="false">🔅 Keep screen on</button>
+  <p id="keep-awake-help" class="hint" hidden>
+    This iPad couldn't keep the screen on from here (it needs iPadOS 16.4 or newer, with the app
+    opened from its https:// address). Instead, go to Settings → Display &amp; Brightness →
+    Auto-Lock and choose a longer time.
+  </p>
+</div>
+<script src="{{ url_for('static', filename='keep_awake.js') }}"></script>
