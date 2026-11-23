@@ -78,7 +78,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `150 passed`.
+    You should see a line like `151 passed`.
 
 ### Part C: Create your secret settings file (.env)
 

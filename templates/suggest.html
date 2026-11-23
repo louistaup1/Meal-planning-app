@@ -60,7 +60,14 @@
     <button type="submit" class="button primary" id="suggest-button">
       {% if suggestions %}Suggest again{% else %}Suggest{% endif %}
     </button>
-    <p class="thinking" id="thinking" hidden>👩‍🍳 Claude is thinking about recipes. This can take up to a minute…</p>
+    <div class="cooking-wait" id="thinking" hidden role="status" aria-live="polite">
+      <div class="pot-stage" aria-hidden="true">
+        <span class="steam steam-1">💨</span><span class="steam steam-2">💨</span><span class="steam steam-3">💨</span>
+        <span class="pot">🍲</span>
+      </div>
+      <p class="wait-text" id="wait-text">Chopping up some ideas…</p>
+      <p class="hint">This can take up to a minute.</p>
+    </div>
   </form>
 
   {% if error %}<p class="errors-box">{{ error }}</p>{% endif %}
@@ -90,10 +97,18 @@
   {% endfor %}
 
   <script>
-    // Show the "thinking" message and stop double taps while Claude works.
+    // While suggestions are on their way: show the bubbling pot, change the message
+    // every few seconds, and stop double taps.
+    var WAIT_LINES = ["Chopping up some ideas…", "Stirring the pot…", "Raiding your pantry…",
+                      "Tasting for seasoning…", "Plating up your suggestions…"];
     document.getElementById("suggest-form").addEventListener("submit", function () {
       document.getElementById("thinking").hidden = false;
       document.getElementById("suggest-button").disabled = true;
+      var line = 0;
+      setInterval(function () {
+        line = Math.min(line + 1, WAIT_LINES.length - 1);  // stay on the last line if it takes a while
+        document.getElementById("wait-text").textContent = WAIT_LINES[line];
+      }, 3000);
     });
   </script>
 {% endblock %}

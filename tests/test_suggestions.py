@@ -322,3 +322,11 @@ def test_empty_box_on_first_visit(tmp_path):
     client = make_client(tmp_path, PretendClaude())
     assert b'name="extra"' in client.get("/suggest").data
     assert b"></textarea>" in client.get("/suggest").data
+
+
+
+def test_waiting_message_is_about_cooking_not_claude(tmp_path):
+    page = make_client(tmp_path, PretendClaude()).get("/suggest").data
+    assert b'class="cooking-wait" id="thinking" hidden' in page
+    assert b"Chopping up some ideas" in page
+    assert b"Claude is thinking" not in page

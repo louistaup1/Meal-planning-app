@@ -537,3 +537,50 @@ details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
   letter-spacing: 0.04em;
   margin: 8px 0 12px;
 }
+
+/* ---------- Waiting for suggestions: the bubbling pot ---------- */
+
+.cooking-wait {
+  background: var(--card);
+  border: 3px solid var(--outline);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 var(--outline);
+  padding: 18px;
+  margin: 20px 0;
+  text-align: center;
+}
+.cooking-wait[hidden] { display: none; }
+.pot-stage { position: relative; height: 150px; }
+.pot {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  font-size: 64px;
+  transform: translateX(-50%);
+  animation: pot-wobble 1.2s ease-in-out infinite;
+}
+.steam {
+  position: absolute;
+  bottom: 58px;
+  font-size: 26px;
+  opacity: 0;
+  animation: steam-rise 2.4s ease-out infinite;
+}
+.steam-1 { left: 42%; }
+.steam-2 { left: 52%; animation-delay: 0.8s; }
+.steam-3 { left: 47%; animation-delay: 1.6s; }
+.wait-text { font: 700 20px "Fredoka", sans-serif; margin: 12px 0 4px; }
+@keyframes pot-wobble {
+  0%, 100% { transform: translateX(-50%) rotate(-4deg); }
+  50% { transform: translateX(-50%) rotate(4deg); }
+}
+@keyframes steam-rise {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: translateY(-50px) scale(1.2); opacity: 0; }
+}
+/* iPads with "Reduce Motion" switched on: keep the pot still. */
+@media (prefers-reduced-motion: reduce) {
+  .pot, .steam { animation: none; }
+  .steam-2 { opacity: 0.6; }
+}
