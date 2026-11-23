@@ -44,12 +44,15 @@ SPICY_WORDS = ("chilli", "chili", "peperoncino", "cayenne", "jalape")
 
 def check_recipes():
     """Ask Claude for real suggestions and check they use the pantry and respect the dislike."""
-    request_text = build_request(PRETEND_PANTRY, read_filters({"cuisine": "Italian", "people": "2"}),
-                                 ratings=PRETEND_RATINGS)
+    # "Your own words" ask for 6 servings while the People dropdown says 2: the words should win.
+    filters = read_filters({"cuisine": "Italian", "people": "2", "extra": "a big batch for 6 people"})
+    request_text = build_request(PRETEND_PANTRY, filters, ratings=PRETEND_RATINGS)
     recipes = ai_client.suggest_recipes(request_text)
     problems = []
     for recipe in recipes:
         text = (recipe["title"] + " " + " ".join(i["name"] for i in recipe["ingredients"])).lower()
+        if recipe["servings"] != 6:
+            problems.append(f"{recipe['title']} serves {recipe['servings']}, but the wishes asked for 6")
         if "peperoncino" in recipe["title"].lower() or "aglio" in recipe["title"].lower():
             problems.append(f"{recipe['title']} was disliked and shouldn't be suggested again")
         if any(word in text for word in SPICY_WORDS):

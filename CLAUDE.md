@@ -108,7 +108,8 @@ to paste a key into the chat.
 
 ## Scope
 
-- Built: pantry (folding categories), password, Add from photos (receipts, PDFs, shelves,
+- Built: a free-text "What are you in the mood for?" box above the suggestion filters (its words
+  win over the dropdowns), pantry (folding categories), password, Add from photos (receipts, PDFs, shelves,
   spices), My recipes (paste, tidied by Claude into ingredients and steps, or ⭐ Save; each can be
   cooked), suggestions with filters (meal, dish, cuisine, difficulty, style, people), cook flow,
   cooking diary ("Cooked before" on suggestions), 👍 / 👎 ratings with optional reasons (the 15
@@ -117,7 +118,7 @@ to paste a key into the chat.
   app icon.
 - Not built: weekly shopping lists, meal scheduling, user accounts, sharing. Only build these
   when asked, one at a time.
-- Parked idea: a "What are you in the mood for?" text box above the filters, plus at most one
-  clarifying question from Claude (mockups were made). Don't build it unless asked.
+- Parked idea: Claude asking at most one clarifying question (for example how many people) when
+  the free-text wishes are vague (a mockup was made). Don't build it unless asked.
 - This cloud environment can't reach most websites (for example recipe sites). Ask the user before
   allowing new hosts.

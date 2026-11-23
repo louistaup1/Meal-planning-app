@@ -34,14 +34,14 @@ def ingredient(name, amount, unit, pantry_item_id, is_staple=False):
 
 def test_filters_default_to_main_dish_for_dinner_and_two_people():
     assert read_filters({}) == {"meal": "Dinner", "dish_type": "Main", "cuisine": "Any",
-                                "difficulty": "Any", "style": "Any", "people": 2}
+                                "difficulty": "Any", "style": "Any", "people": 2, "extra": ""}
 
 
 def test_unknown_filter_values_fall_back_to_defaults():
     filters = read_filters({"meal": "Brunch", "dish_type": "Snack", "cuisine": "Martian",
                             "difficulty": "Easy", "style": "Comfort", "people": "4"})
     assert filters == {"meal": "Dinner", "dish_type": "Main", "cuisine": "Any",
-                       "difficulty": "Easy", "style": "Comfort", "people": 4}
+                       "difficulty": "Easy", "style": "Comfort", "people": 4, "extra": ""}
 
 
 def test_request_names_the_meal_and_dish_type():
@@ -198,3 +198,21 @@ def test_format_cooked_date():
     assert format_cooked_date(date(2026, 11, 9), today) == "9 Nov"
     assert format_cooked_date(date(2025, 12, 24), today) == "24 Dec 2025"
     assert format_cooked_date(None, today) == ""
+
+
+
+# --- Your own words ---------------------------------------------------------------
+
+def test_extra_wishes_are_tidied_and_limited():
+    assert read_filters({"extra": "  recipes with\n chicken  "})["extra"] == "recipes with chicken"
+    assert len(read_filters({"extra": "x" * 1000})["extra"]) == 300
+
+
+def test_extra_wishes_go_into_the_request_and_come_first():
+    text = build_request(PANTRY, read_filters({"extra": "big batch cooking for 8"}), TODAY)
+    assert ("In my own words (these come first if they disagree with the preferences above):\n"
+            "big batch cooking for 8") in text
+
+
+def test_no_extra_section_when_the_box_is_empty():
+    assert "In my own words" not in build_request(PANTRY, read_filters({}), TODAY)

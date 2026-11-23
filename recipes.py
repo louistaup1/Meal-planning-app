@@ -17,6 +17,9 @@ CUISINES = ["Any", "Italian", "French", "Asian", "Indian", "Mexican", "Mediterra
 DIFFICULTIES = ["Any", "Easy", "Medium", "Hard"]
 STYLES = ["Any", "Quick", "Comfort", "Healthy"]
 MEALS = ["Breakfast", "Lunch", "Dinner"]
+
+# The free-text box ("recipes with chicken", "big batch cooking") is cut to this many characters.
+MAX_EXTRA_LENGTH = 300
 DISH_TYPES = ["Any", "Main", "Starter", "Side", "Dessert"]
 DEFAULT_MEAL = "Dinner"
 DEFAULT_DISH_TYPE = "Main"
@@ -59,6 +62,9 @@ def read_filters(form):
     except ValueError:
         people = DEFAULT_PEOPLE
     filters["people"] = people if people in PEOPLE_CHOICES else DEFAULT_PEOPLE
+
+    # Your own words from the free-text box (optional).
+    filters["extra"] = " ".join(form.get("extra", "").split())[:MAX_EXTRA_LENGTH]
     return filters
 
 
@@ -135,6 +141,8 @@ def build_request(pantry_items, filters, today=None, my_recipes=(), ratings=()):
         f"for {filters['meal'].lower()}, for {people_text}.\n\n"
         f"My pantry:\n{describe_pantry(pantry_items, today)}\n\n"
         f"My preferences:\n{wishes_text}"
+        + (f"\n\nIn my own words (these come first if they disagree with the preferences above):\n"
+           f"{filters['extra']}" if filters.get("extra") else "")
         + (f"\n\nMy saved recipes:\n{describe_my_recipes(my_recipes)}" if my_recipes else "")
         + describe_ratings(ratings)
     )

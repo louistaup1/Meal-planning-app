@@ -303,3 +303,22 @@ def test_recipes_from_my_recipes_have_no_save_button(tmp_path):
 
     assert b"From my recipes" in page.data
     assert b"\xe2\xad\x90 Save</button>" not in page.data
+
+
+
+def test_your_own_words_are_sent_and_remembered(tmp_path):
+    pretend = PretendClaude()
+    client = make_client(tmp_path, pretend)
+    add_spaghetti(client)
+
+    page = client.post("/suggest", data={"extra": "big batch cooking", "people": "2"})
+
+    assert "big batch cooking" in pretend.requests[0]
+    assert b">big batch cooking</textarea>" in page.data
+    assert b">big batch cooking</textarea>" in client.get("/suggest").data   # Back to suggestions keeps it
+
+
+def test_empty_box_on_first_visit(tmp_path):
+    client = make_client(tmp_path, PretendClaude())
+    assert b'name="extra"' in client.get("/suggest").data
+    assert b"></textarea>" in client.get("/suggest").data

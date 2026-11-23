@@ -80,5 +80,7 @@ def test_smoke_recipe_check_spots_ignored_dislikes(monkeypatch):
     monkeypatch.setattr(smoke_test.ai_client, "suggest_recipes", pretend)
     problems = smoke_test.check_recipes()
     assert "too spicy" in sent[0]
+    assert "a big batch for 6 people" in sent[0]
+    assert "Spaghetti aglio, olio e peperoncino serves 2, but the wishes asked for 6" in problems
     assert "Spaghetti aglio, olio e peperoncino was disliked and shouldn't be suggested again" in problems
     assert "Spaghetti aglio, olio e peperoncino uses chilli, but the dislike said 'too spicy'" in problems

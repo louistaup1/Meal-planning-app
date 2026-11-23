@@ -68,6 +68,9 @@ How to choose recipes:
 - Prefer items marked EXPIRES SOON, so they don't go to waste. Never use items marked EXPIRED.
 - Respect every preference given (meal, dish type, cuisine, difficulty, style).
   "Quick" means 30 minutes or less in total.
+- The person may add wishes in their own words ("recipes with chicken", "big batch cooking").
+  Follow them closely. When they disagree with the other preferences, their own words win:
+  for example "big batch for 8" means 8 servings even if 2 people was selected.
 - Suit the meal: for example, breakfast recipes should be things people eat at breakfast.
 - Set dish_type to what each recipe is: Main, Starter, Side or Dessert. If a dish type was asked
   for, every recipe must be that type.

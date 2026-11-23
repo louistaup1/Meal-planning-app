@@ -522,3 +522,18 @@ details.category:not([open]) .fold-arrow { transform: rotate(-90deg); }
 .keep-awake-button { background: var(--card); font-size: 16px; padding: 8px 14px; }
 .keep-awake-button.is-on { background: var(--yellow); }
 .keep-awake-button[disabled] { opacity: 0.5; }
+
+/* ---------- "What are you in the mood for?" box ---------- */
+
+.item-form .extra-box textarea {
+  min-height: 96px;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 4px 4px 0 var(--purple);
+}
+.fine-tune {
+  font: 700 16px "Fredoka", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 8px 0 12px;
+}

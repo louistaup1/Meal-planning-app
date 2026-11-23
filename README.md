@@ -28,7 +28,9 @@ suggests what to cook for dinner, using Claude (Anthropic's AI).
   it again, and switches itself back on next time if you left it on.
 - **Cooking diary:** suggestions you've cooked before show "✅ Cooked before · last on 9 Nov",
   and My recipes shows when you last cooked each one.
-- **What should I cook tonight?** suggests up to 3 recipes from your pantry. You can filter
+- **What should I cook tonight?** suggests up to 3 recipes from your pantry. Type (or dictate)
+  what you're in the mood for, like "recipes with chicken" or "big batch cooking"; when your
+  words and the dropdowns disagree, your words win. You can filter
   by meal (breakfast, lunch, dinner), dish (main, starter, side, dessert), cuisine,
   difficulty, style (quick, comfort, healthy) and number of people (1–8). Each suggestion shows the total
   time, the difficulty and what you're missing. **Back to suggestions** shows your last
@@ -76,7 +78,7 @@ Wherever you see `YOURNAME`, use your PythonAnywhere username.
     ```
     pytest
     ```
-    You should see a line like `145 passed`.
+    You should see a line like `150 passed`.
 
 ### Part C: Create your secret settings file (.env)
 

@@ -7,6 +7,12 @@
   <h1>What should I cook?</h1>
 
   <form method="post" class="item-form filters" id="suggest-form">
+    <label class="extra-box">What are you in the mood for?
+      <span class="hint">(optional, type or tap 🎤 to talk)</span>
+      <textarea name="extra" maxlength="300" rows="3"
+                placeholder="e.g. recipes with chicken, big batch cooking, nothing too heavy">{{ filters.extra }}</textarea>
+    </label>
+    <p class="fine-tune">⚙️ Fine-tune (optional)</p>
     <div class="row">
       <label>Meal
         <select name="meal">
